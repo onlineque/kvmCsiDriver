@@ -3,9 +3,12 @@ package main
 import (
 	"context"
 	csi "github.com/onlineque/kvmCsiDriver/csi_proto"
+	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	wrappers "google.golang.org/protobuf/types/known/wrapperspb"
+	"log"
+	"net"
 )
 
 type nodeServer struct {
@@ -18,6 +21,7 @@ type nodeServer struct {
 type identityServer struct {
 	name    string
 	version string
+	csi.UnimplementedIdentityServer
 }
 
 func newIdentityServer(name, version string) *identityServer {
@@ -51,10 +55,51 @@ func (ids *identityServer) Probe(ctx context.Context, req *csi.ProbeRequest) (*c
 }
 
 func (ns *nodeServer) NodePublishVolume(ctx context.Context, req *csi.NodePublishVolumeRequest) (*csi.NodePublishVolumeResponse, error) {
+	// mounting the volume should be here
+	return &csi.NodePublishVolumeResponse{}, nil
 }
 
 func (ns *nodeServer) NodeUnpublishVolume(ctx context.Context, req *csi.NodeUnpublishVolumeRequest) (*csi.NodeUnpublishVolumeResponse, error) {
+	// unmounting  the volume should be here
+	return &csi.NodeUnpublishVolumeResponse{}, nil
 }
 
 func (ns *nodeServer) NodeGetCapabilities(ctx context.Context, req *csi.NodeGetCapabilitiesRequest) (*csi.NodeGetCapabilitiesResponse, error) {
+	caps := []*csi.NodeServiceCapability{}
+
+	return &csi.NodeGetCapabilitiesResponse{
+		Capabilities: caps,
+	}, nil
+}
+
+func main() {
+	ctx := context.TODO()
+
+	proto := "unix"
+	//addr := "/var/lib/kubelet/plugins/example.csi.clew.cz/csi.sock"
+	addr := "/tmp/csi.sock"
+	listener, err := net.Listen(proto, addr)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	defer listener.Close()
+
+	server := grpc.NewServer()
+
+	ids := newIdentityServer("example.csi.clew.cz", "1.0")
+	if ids != nil {
+		csi.RegisterIdentityServer(server, ids)
+	}
+	// TODO: register nodeServer here
+
+	go func() {
+		err = server.Serve(listener)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}()
+
+	<-ctx.Done()
+	server.GracefulStop()
 }
