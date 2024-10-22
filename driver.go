@@ -9,6 +9,7 @@ import (
 	wrappers "google.golang.org/protobuf/types/known/wrapperspb"
 	"log"
 	"net"
+	"os"
 )
 
 type nodeServer struct {
@@ -78,6 +79,13 @@ func main() {
 	proto := "unix"
 	//addr := "/var/lib/kubelet/plugins/example.csi.clew.cz/csi.sock"
 	addr := "/tmp/csi.sock"
+
+	if proto == "unix" {
+		if err := os.Remove(addr); err != nil && !os.IsNotExist(err) {
+			log.Fatalf("failed to remove unix domain socket %s", addr)
+		}
+	}
+
 	listener, err := net.Listen(proto, addr)
 	if err != nil {
 		log.Fatal(err)
@@ -91,7 +99,8 @@ func main() {
 	if ids != nil {
 		csi.RegisterIdentityServer(server, ids)
 	}
-	// TODO: register nodeServer here
+
+	csi.RegisterNodeServer(server, &nodeServer{})
 
 	go func() {
 		err = server.Serve(listener)
