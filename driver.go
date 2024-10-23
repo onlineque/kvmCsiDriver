@@ -12,6 +12,10 @@ import (
 	"os"
 )
 
+type controllerServer struct {
+	csi.UnimplementedControllerServer
+}
+
 type nodeServer struct {
 	nodeID string
 	csi.UnimplementedNodeServer
@@ -88,6 +92,88 @@ func (ns *nodeServer) NodeGetInfo(ctx context.Context, req *csi.NodeGetInfoReque
 
 }
 
+func (cs *controllerServer) CreateVolume(ctx context.Context, req *csi.CreateVolumeRequest) (*csi.CreateVolumeResponse, error) {
+	log.Print("CreateVolume called")
+	topologies := []*csi.Topology{}
+
+	return &csi.CreateVolumeResponse{
+		Volume: &csi.Volume{
+			VolumeId:           "dummy",
+			CapacityBytes:      int64(2000000),
+			VolumeContext:      req.GetParameters(),
+			ContentSource:      req.GetVolumeContentSource(),
+			AccessibleTopology: topologies,
+		},
+	}, nil
+}
+
+func (cs *controllerServer) DeleteVolume(ctx context.Context, req *csi.DeleteVolumeRequest) (*csi.DeleteVolumeResponse, error) {
+	log.Print("DeleteVolume called")
+	return &csi.DeleteVolumeResponse{}, nil
+}
+
+func (cs *controllerServer) ControllerPublishVolume(ctx context.Context, req *csi.ControllerPublishVolumeRequest) (*csi.ControllerPublishVolumeResponse, error) {
+	log.Print("ControllerPublishVolume called")
+	return &csi.ControllerPublishVolumeResponse{
+		PublishContext: map[string]string{},
+	}, nil
+}
+
+func (cs *controllerServer) ControllerUnpublishVolume(ctx context.Context, req *csi.ControllerUnpublishVolumeRequest) (*csi.ControllerUnpublishVolumeResponse, error) {
+	log.Print("ControllerUnpublishVolume called")
+	return &csi.ControllerUnpublishVolumeResponse{}, nil
+}
+
+func (cs *controllerServer) ValidateVolumeCapabilities(ctx context.Context, req *csi.ValidateVolumeCapabilitiesRequest) (*csi.ValidateVolumeCapabilitiesResponse, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (cs *controllerServer) ListVolumes(ctx context.Context, req *csi.ListVolumesRequest) (*csi.ListVolumesResponse, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (cs *controllerServer) GetCapacity(ctx context.Context, req *csi.GetCapacityRequest) (*csi.GetCapacityResponse, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (cs *controllerServer) ControllerGetCapabilities(ctx context.Context, req *csi.ControllerGetCapabilitiesRequest) (*csi.ControllerGetCapabilitiesResponse, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (cs *controllerServer) CreateSnapshot(ctx context.Context, req *csi.CreateSnapshotRequest) (*csi.CreateSnapshotResponse, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (cs *controllerServer) DeleteSnapshot(ctx context.Context, req *csi.DeleteSnapshotRequest) (*csi.DeleteSnapshotResponse, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (cs *controllerServer) ListSnapshots(ctx context.Context, req *csi.ListSnapshotsRequest) (*csi.ListSnapshotsResponse, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (cs *controllerServer) ControllerExpandVolume(ctx context.Context, req *csi.ControllerExpandVolumeRequest) (*csi.ControllerExpandVolumeResponse, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (cs *controllerServer) ControllerGetVolume(ctx context.Context, req *csi.ControllerGetVolumeRequest) (*csi.ControllerGetVolumeResponse, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (cs *controllerServer) ControllerModifyVolume(ctx context.Context, req *csi.ControllerModifyVolumeRequest) (*csi.ControllerModifyVolumeResponse, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
 func main() {
 	ctx := context.TODO()
 
@@ -118,6 +204,8 @@ func main() {
 	csi.RegisterNodeServer(server, &nodeServer{
 		nodeID: os.Getenv("NODE_ID"),
 	})
+
+	csi.RegisterControllerServer(server, &controllerServer{})
 
 	go func() {
 		err = server.Serve(listener)
