@@ -54,7 +54,15 @@ func (ids *identityServer) GetPluginInfo(ctx context.Context, req *csi.GetPlugin
 func (ids *identityServer) GetPluginCapabilities(ctx context.Context, req *csi.GetPluginCapabilitiesRequest) (*csi.GetPluginCapabilitiesResponse, error) {
 	log.Print("GetPluginCapabilities called")
 	return &csi.GetPluginCapabilitiesResponse{
-		Capabilities: []*csi.PluginCapability{},
+		Capabilities: []*csi.PluginCapability{
+			{
+				Type: &csi.PluginCapability_Service_{
+					Service: &csi.PluginCapability_Service{
+						Type: csi.PluginCapability_Service_CONTROLLER_SERVICE,
+					},
+				},
+			},
+		},
 	}, nil
 }
 
@@ -180,6 +188,7 @@ func main() {
 	proto := "unix"
 	//addr := "/var/lib/kubelet/plugins/example.csi.clew.cz/csi.sock"
 	addr := "/csi/csi.sock"
+	//addr := "/tmp/csi.sock"
 
 	if proto == "unix" {
 		if err := os.Remove(addr); err != nil && !os.IsNotExist(err) {
