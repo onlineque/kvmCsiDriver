@@ -19,5 +19,5 @@ WORKDIR /
 COPY --from=build-stage /usr/share/zoneinfo /usr/share/zoneinfo
 COPY --from=build-stage /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=build-stage /driver /driver
-USER 10001:10001
+# USER 10001:10001
 ENTRYPOINT ["/driver"]
