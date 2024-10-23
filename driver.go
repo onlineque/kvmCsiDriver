@@ -148,8 +148,19 @@ func (cs *controllerServer) GetCapacity(ctx context.Context, req *csi.GetCapacit
 }
 
 func (cs *controllerServer) ControllerGetCapabilities(ctx context.Context, req *csi.ControllerGetCapabilitiesRequest) (*csi.ControllerGetCapabilitiesResponse, error) {
-	//TODO implement me
-	panic("implement me")
+	log.Print("ControllerGetCapabilities called")
+	var csc []*csi.ControllerServiceCapability
+	csc = append(csc, &csi.ControllerServiceCapability{
+		Type: &csi.ControllerServiceCapability_Rpc{
+			Rpc: &csi.ControllerServiceCapability_RPC{
+				Type: csi.ControllerServiceCapability_RPC_CREATE_DELETE_VOLUME,
+			},
+		},
+	})
+
+	return &csi.ControllerGetCapabilitiesResponse{
+		Capabilities: csc,
+	}, nil
 }
 
 func (cs *controllerServer) CreateSnapshot(ctx context.Context, req *csi.CreateSnapshotRequest) (*csi.CreateSnapshotResponse, error) {
@@ -186,7 +197,6 @@ func main() {
 	ctx := context.TODO()
 
 	proto := "unix"
-	//addr := "/var/lib/kubelet/plugins/example.csi.clew.cz/csi.sock"
 	addr := "/csi/csi.sock"
 	//addr := "/tmp/csi.sock"
 
