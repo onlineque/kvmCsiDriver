@@ -13,6 +13,7 @@ import (
 )
 
 type nodeServer struct {
+	nodeID string
 	csi.UnimplementedNodeServer
 }
 
@@ -114,7 +115,9 @@ func main() {
 		csi.RegisterIdentityServer(server, ids)
 	}
 
-	csi.RegisterNodeServer(server, &nodeServer{})
+	csi.RegisterNodeServer(server, &nodeServer{
+		nodeID: os.Getenv("NODE_ID"),
+	})
 
 	go func() {
 		err = server.Serve(listener)

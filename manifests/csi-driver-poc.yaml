@@ -25,6 +25,12 @@ spec:
           imagePullPolicy: Always
           name: kvm-csi-driver
           resources: {}
+          env:
+            - name: NODE_ID
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: spec.nodeName
           volumeMounts:
             - mountPath: /csi
               name: plugin-dir
