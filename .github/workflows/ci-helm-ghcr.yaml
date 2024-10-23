@@ -1,0 +1,30 @@
+name: ci-helm-ghcr
+permissions:
+  packages: write
+  contents: read
+on:
+  push:
+    # Publish semver tags as releases.
+    tags: [ '*.*.*' ]
+  pull_request:
+env:
+  CHART_NAME: garbagedisposal
+  IMAGE_TAG: ${{ github.ref_name }}
+jobs:
+  release-helmchart:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: helm lint
+        run: |
+          helm lint helm/kvmcsidriver
+      - name: helm login
+        run: |
+          echo ${{ secrets.GITHUB_TOKEN }} | helm registry login ghcr.io -u $ --password-stdin
+      - name: helm package
+        run: |
+          helm package helm/kvmcsidriver --version $IMAGE_TAG
+      - name: helm push
+        if: ${{ github.event_name == 'push' }}
+        run: |
+          helm push $CHART_NAME-$IMAGE_TAG.tgz oci://ghcr.io/${{ github.repository_owner }}
