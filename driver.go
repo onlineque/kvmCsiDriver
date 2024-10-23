@@ -39,6 +39,7 @@ func (ids *identityServer) GetPluginInfo(ctx context.Context, req *csi.GetPlugin
 	if ids.version == "" {
 		return nil, status.Error(codes.Unavailable, "driver version not configured")
 	}
+	log.Print("GetPluginInfo called")
 	return &csi.GetPluginInfoResponse{
 		Name:          ids.name,
 		VendorVersion: ids.version,
@@ -46,26 +47,31 @@ func (ids *identityServer) GetPluginInfo(ctx context.Context, req *csi.GetPlugin
 }
 
 func (ids *identityServer) GetPluginCapabilities(ctx context.Context, req *csi.GetPluginCapabilitiesRequest) (*csi.GetPluginCapabilitiesResponse, error) {
+	log.Print("GetPluginCapabilities called")
 	return &csi.GetPluginCapabilitiesResponse{
 		Capabilities: []*csi.PluginCapability{},
 	}, nil
 }
 
 func (ids *identityServer) Probe(ctx context.Context, req *csi.ProbeRequest) (*csi.ProbeResponse, error) {
+	log.Print("Probe called")
 	return &csi.ProbeResponse{Ready: &wrappers.BoolValue{Value: true}}, nil
 }
 
 func (ns *nodeServer) NodePublishVolume(ctx context.Context, req *csi.NodePublishVolumeRequest) (*csi.NodePublishVolumeResponse, error) {
 	// mounting the volume should be here
+	log.Print("NodePublishVolume called")
 	return &csi.NodePublishVolumeResponse{}, nil
 }
 
 func (ns *nodeServer) NodeUnpublishVolume(ctx context.Context, req *csi.NodeUnpublishVolumeRequest) (*csi.NodeUnpublishVolumeResponse, error) {
+	log.Print("NodeUnpublishVolume called")
 	// unmounting  the volume should be here
 	return &csi.NodeUnpublishVolumeResponse{}, nil
 }
 
 func (ns *nodeServer) NodeGetCapabilities(ctx context.Context, req *csi.NodeGetCapabilitiesRequest) (*csi.NodeGetCapabilitiesResponse, error) {
+	log.Print("NodeGetCapabilities called")
 	caps := []*csi.NodeServiceCapability{}
 
 	return &csi.NodeGetCapabilitiesResponse{
