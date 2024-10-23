@@ -78,7 +78,7 @@ func main() {
 
 	proto := "unix"
 	//addr := "/var/lib/kubelet/plugins/example.csi.clew.cz/csi.sock"
-	addr := "/tmp/csi.sock"
+	addr := "/csi/csi.sock"
 
 	if proto == "unix" {
 		if err := os.Remove(addr); err != nil && !os.IsNotExist(err) {
