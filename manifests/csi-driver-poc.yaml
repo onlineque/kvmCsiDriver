@@ -25,6 +25,8 @@ spec:
           imagePullPolicy: Always
           name: kvm-csi-driver
           resources: {}
+          args:
+            - nodeserver
           env:
             - name: NODE_ID
               valueFrom:
@@ -126,3 +128,216 @@ metadata:
 provisioner: example.csi.clew.cz
 reclaimPolicy: Delete
 volumeBindingMode: Immediate
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  creationTimestamp: null
+  name: kvm-csi-driver-controller-sa
+  namespace: kvm-csi-driver
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: kvm-csi-driver-controller-role
+  namespace: kvm-csi-driver
+rules:
+  - apiGroups:
+      - coordination.k8s.io
+    resources:
+      - leases
+    verbs:
+      - get
+      - watch
+      - list
+      - delete
+      - update
+      - create
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  creationTimestamp: null
+  name: kvm-csi-driver-controller-role-binding
+  namespace: kvm-csi-driver
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: kvm-csi-driver-controller-role
+subjects:
+  - kind: ServiceAccount
+    name: kvm-csi-driver-controller-sa
+    namespace: kvm-csi-driver
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: kvm-csi-driver-controller
+  name: kvm-csi-driver-controller
+  namespace: kvm-csi-driver
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kvm-csi-driver-controller
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        app: kvm-csi-driver-controller
+    spec:
+      containers:
+        - image: ghcr.io/onlineque/kvmcsidriver:main
+          name: kvmcsidriver
+          args:
+            - controllerserver
+          resources: {}
+          volumeMounts:
+            - mountPath: /csi
+              name: socket-dir
+            - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+              name: kube-api-access-fz2wq
+              readOnly: true
+        - image: registry.k8s.io/sig-storage/csi-provisioner:v3.4.0
+          name: csi-provisioner
+          args:
+            - --csi-address=$(ADDRESS)
+            - --v=0
+            - --timeout=2m30s
+            - --retry-interval-start=500ms
+            - --leader-election=true
+            - --leader-election-namespace=kvm-csi-driver
+            - --leader-election-lease-duration=137s
+            - --leader-election-renew-deadline=107s
+            - --leader-election-retry-period=26s
+            - --extra-create-metadata=true
+          env:
+            - name: ADDRESS
+              value: unix:///csi/csi.sock
+          imagePullPolicy: IfNotPresent
+          resources:
+            limits:
+              cpu: 200m
+              memory: 256Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          volumeMounts:
+            - mountPath: /csi
+              name: socket-dir
+            - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+              name: kube-api-access-fz2wq
+              readOnly: true
+      volumes:
+        - emptyDir:
+            medium: Memory
+          name: socket-dir
+        - name: kube-api-access-fz2wq
+          projected:
+            defaultMode: 420
+            sources:
+              - serviceAccountToken:
+                  expirationSeconds: 3607
+                  path: token
+              - configMap:
+                  items:
+                    - key: ca.crt
+                      path: ca.crt
+                  name: kube-root-ca.crt
+              - downwardAPI:
+                  items:
+                    - fieldRef:
+                        apiVersion: v1
+                        fieldPath: metadata.namespace
+                      path: namespace
+      serviceAccountName: kvm-csi-driver-controller-sa
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: kvm-csi-driver-controller-clusterrole
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - events
+    verbs:
+      - create
+  - apiGroups:
+      - ""
+    resources:
+      - persistentvolumeclaims
+    verbs:
+      - list
+      - watch
+  - apiGroups:
+      - storage.k8s.io
+    resources:
+      - storageclasses
+    verbs:
+      - list
+      - watch
+  - apiGroups:
+      - ""
+    resources:
+      - secrets
+    verbs:
+      - get
+      - list
+  - apiGroups:
+      - ""
+    resources:
+      - persistentvolumes
+    verbs:
+      - get
+      - list
+      - watch
+      - create
+      - delete
+  - apiGroups:
+      - storage.k8s.io
+    resources:
+      - volumeattachments
+    verbs:
+      - get
+      - list
+  - apiGroups:
+      - ""
+    resources:
+      - configmaps
+    verbs:
+      - get
+  - apiGroups:
+      - ""
+    resources:
+      - serviceaccounts
+    verbs:
+      - get
+  - apiGroups:
+      - ""
+    resources:
+      - serviceaccounts/token
+    verbs:
+      - create
+  - apiGroups:
+      - ""
+    resources:
+      - nodes
+    verbs:
+      - get
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: kvm-csi-driver-controller-clusterrolebinding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: kvm-csi-driver-controller-clusterrole
+subjects:
+  - kind: ServiceAccount
+    name: kvm-csi-driver-controller-sa
+    namespace: kvm-csi-driver
