@@ -21,7 +21,7 @@ This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		log.Print("starting controllerServer...")
-		driver.RunControllerServer()
+		driver.RunServer(true, false)
 	},
 }
 

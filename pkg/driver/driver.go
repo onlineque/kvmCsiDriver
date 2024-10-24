@@ -193,7 +193,7 @@ func (cs *controllerServer) ControllerModifyVolume(ctx context.Context, req *csi
 	panic("implement me")
 }
 
-func RunNodeServer() {
+func RunServer(runControllerServer bool, runNodeServer bool) {
 	ctx := context.TODO()
 
 	proto := "unix"
@@ -220,49 +220,15 @@ func RunNodeServer() {
 		csi.RegisterIdentityServer(server, ids)
 	}
 
-	csi.RegisterNodeServer(server, &nodeServer{
-		nodeID: os.Getenv("NODE_ID"),
-	})
-
-	go func() {
-		err = server.Serve(listener)
-		if err != nil {
-			log.Fatal(err)
-		}
-	}()
-
-	<-ctx.Done()
-	server.GracefulStop()
-}
-
-func RunControllerServer() {
-	ctx := context.TODO()
-
-	proto := "unix"
-	addr := "/csi/csi.sock"
-	//addr := "/tmp/csi.sock"
-
-	if proto == "unix" {
-		if err := os.Remove(addr); err != nil && !os.IsNotExist(err) {
-			log.Fatalf("failed to remove unix domain socket %s", addr)
-		}
+	if runNodeServer {
+		csi.RegisterNodeServer(server, &nodeServer{
+			nodeID: os.Getenv("NODE_ID"),
+		})
 	}
 
-	listener, err := net.Listen(proto, addr)
-	if err != nil {
-		log.Fatal(err)
+	if runControllerServer {
+		csi.RegisterControllerServer(server, &controllerServer{})
 	}
-
-	defer listener.Close()
-
-	server := grpc.NewServer()
-
-	ids := newIdentityServer("example.csi.clew.cz", "1.0")
-	if ids != nil {
-		csi.RegisterIdentityServer(server, ids)
-	}
-
-	csi.RegisterControllerServer(server, &controllerServer{})
 
 	go func() {
 		err = server.Serve(listener)
