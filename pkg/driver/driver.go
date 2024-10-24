@@ -1,4 +1,4 @@
-package main
+package driver
 
 import (
 	"context"
@@ -193,7 +193,7 @@ func (cs *controllerServer) ControllerModifyVolume(ctx context.Context, req *csi
 	panic("implement me")
 }
 
-func main() {
+func RunServer(runControllerServer bool, runNodeServer bool) {
 	ctx := context.TODO()
 
 	proto := "unix"
@@ -220,11 +220,15 @@ func main() {
 		csi.RegisterIdentityServer(server, ids)
 	}
 
-	csi.RegisterNodeServer(server, &nodeServer{
-		nodeID: os.Getenv("NODE_ID"),
-	})
+	if runNodeServer {
+		csi.RegisterNodeServer(server, &nodeServer{
+			nodeID: os.Getenv("NODE_ID"),
+		})
+	}
 
-	csi.RegisterControllerServer(server, &controllerServer{})
+	if runControllerServer {
+		csi.RegisterControllerServer(server, &controllerServer{})
+	}
 
 	go func() {
 		err = server.Serve(listener)

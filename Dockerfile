@@ -7,6 +7,9 @@ RUN go mod download && \
 
 COPY *.go ./
 COPY csi_proto/*.go ./csi_proto/
+COPY cmd/*.go ./cmd/
+COPY pkg/driver/*.go ./pkg/driver/
+
 RUN CGO_ENABLED=0 GOOS=linux go build -o /driver && \
     strip /driver && \
     upx --ultra-brute /driver
