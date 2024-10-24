@@ -1,4 +1,4 @@
-package main
+package driver
 
 import (
 	"context"
@@ -193,7 +193,7 @@ func (cs *controllerServer) ControllerModifyVolume(ctx context.Context, req *csi
 	panic("implement me")
 }
 
-func main() {
+func RunNodeServer() {
 	ctx := context.TODO()
 
 	proto := "unix"
@@ -223,6 +223,44 @@ func main() {
 	csi.RegisterNodeServer(server, &nodeServer{
 		nodeID: os.Getenv("NODE_ID"),
 	})
+
+	go func() {
+		err = server.Serve(listener)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}()
+
+	<-ctx.Done()
+	server.GracefulStop()
+}
+
+func RunControllerServer() {
+	ctx := context.TODO()
+
+	proto := "unix"
+	addr := "/csi/csi.sock"
+	//addr := "/tmp/csi.sock"
+
+	if proto == "unix" {
+		if err := os.Remove(addr); err != nil && !os.IsNotExist(err) {
+			log.Fatalf("failed to remove unix domain socket %s", addr)
+		}
+	}
+
+	listener, err := net.Listen(proto, addr)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	defer listener.Close()
+
+	server := grpc.NewServer()
+
+	ids := newIdentityServer("example.csi.clew.cz", "1.0")
+	if ids != nil {
+		csi.RegisterIdentityServer(server, ids)
+	}
 
 	csi.RegisterControllerServer(server, &controllerServer{})
 
