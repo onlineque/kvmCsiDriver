@@ -104,6 +104,9 @@ func (cs *controllerServer) CreateVolume(ctx context.Context, req *csi.CreateVol
 	log.Print("CreateVolume called")
 	topologies := []*csi.Topology{}
 
+	log.Printf("- name: %s", req.Name)
+	log.Printf("  required capacity: %d", req.CapacityRange.RequiredBytes)
+	log.Printf("  parameters: %v", req.GetParameters())
 	return &csi.CreateVolumeResponse{
 		Volume: &csi.Volume{
 			VolumeId:           "dummy",
