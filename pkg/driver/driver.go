@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	csi "github.com/onlineque/kvmCsiDriver/csi_proto"
-	kvm "github.com/onlineque/kvmCsiDriver/pkg/kvm"
+	"github.com/onlineque/kvmCsiDriver/pkg/kvm"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -111,7 +111,7 @@ func (cs *controllerServer) CreateVolume(ctx context.Context, req *csi.CreateVol
 	log.Printf("  parameters: %v", req.GetParameters())
 
 	k := kvm.Kvm{}
-	volumeId := req.GetParameters()["csi.storage.k8s.io/pv/name"])
+	volumeId := req.GetParameters()["csi.storage.k8s.io/pv/name"]
 	_, err := k.CreateVolume(fmt.Sprintf("/images/%s.qcow2", volumeId), req.CapacityRange.RequiredBytes)
 	if err != nil {
 		return nil, fmt.Errorf("error while creating the QCOW2 image (%s) for the volume: %s", fmt.Sprintf("/images/%s.qcow2", volumeId), err)
