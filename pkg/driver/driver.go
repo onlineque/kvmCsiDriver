@@ -114,7 +114,7 @@ func (cs *controllerServer) CreateVolume(ctx context.Context, req *csi.CreateVol
 	volumeId := req.GetParameters()["csi.storage.k8s.io/pv/name"])
 	_, err := k.CreateVolume(fmt.Sprintf("/images/%s.qcow2", volumeId), req.CapacityRange.RequiredBytes)
 	if err != nil {
-		return nil, fmt.Errorf("error while creating the QCOW2 image for the volume: %s", err)
+		return nil, fmt.Errorf("error while creating the QCOW2 image (%s) for the volume: %s", fmt.Sprintf("/images/%s.qcow2", volumeId), err)
 	}
 
 	return &csi.CreateVolumeResponse{

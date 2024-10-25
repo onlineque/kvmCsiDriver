@@ -233,6 +233,12 @@ spec:
             - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
               name: kube-api-access-fz2wq
               readOnly: true
+          securityContext:
+            allowPrivilegeEscalation: true
+            capabilities:
+              add:
+                - SYS_ADMIN
+            privileged: true
       volumes:
         - name: images-dir
           hostPath:
