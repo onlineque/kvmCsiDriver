@@ -9,6 +9,7 @@ COPY *.go ./
 COPY csi_proto/*.go ./csi_proto/
 COPY cmd/*.go ./cmd/
 COPY pkg/driver/*.go ./pkg/driver/
+COPY pkg/kvm/*.go ./pkg/kvm/
 
 RUN CGO_ENABLED=0 GOOS=linux go build -o /driver && \
     strip /driver && \
