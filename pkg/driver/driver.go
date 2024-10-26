@@ -2,9 +2,8 @@ package driver
 
 import (
 	"context"
-	"fmt"
 	csi "github.com/onlineque/kvmCsiDriver/csi_proto"
-	"github.com/onlineque/kvmCsiDriver/pkg/kvm"
+	sa "github.com/onlineque/kvmCsiDriver/storageagent_proto"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -12,6 +11,7 @@ import (
 	"log"
 	"net"
 	"os"
+	"time"
 )
 
 type controllerServer struct {
@@ -110,16 +110,30 @@ func (cs *controllerServer) CreateVolume(ctx context.Context, req *csi.CreateVol
 	log.Printf("  required capacity: %d", req.CapacityRange.RequiredBytes)
 	log.Printf("  parameters: %v", req.GetParameters())
 
-	k := kvm.Kvm{}
 	volumeId := req.GetParameters()["csi.storage.k8s.io/pv/name"]
-	_, err := k.CreateVolume(fmt.Sprintf("/images/%s.qcow2", volumeId), req.CapacityRange.RequiredBytes)
+
+	conn, err := grpc.NewClient(os.Getenv("STORAGEAGENT_TARGET"))
 	if err != nil {
-		return nil, fmt.Errorf("error while creating the QCOW2 image (%s) for the volume: %s", fmt.Sprintf("/images/%s.qcow2", volumeId), err)
+		return nil, err
+	}
+	defer conn.Close()
+
+	c := sa.NewStorageAgentClient(conn)
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	img, err := c.CreateImage(ctx, sa.ImageRequest{
+		ImageId: volumeId,
+		Size:    req.CapacityRange.RequiredBytes,
+	})
+	if err != nil {
+		return nil, err
 	}
 
 	return &csi.CreateVolumeResponse{
 		Volume: &csi.Volume{
-			VolumeId:           volumeId,
+			VolumeId:           img.ImageId,
 			CapacityBytes:      req.CapacityRange.RequiredBytes,
 			VolumeContext:      req.GetParameters(),
 			ContentSource:      req.GetVolumeContentSource(),

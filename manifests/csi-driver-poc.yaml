@@ -216,6 +216,8 @@ spec:
           env:
             - name: ADDRESS
               value: unix:///csi/csi.sock
+            - name: STORAGEAGENT_TARGET
+              value: 192.168.100.99:7003
           imagePullPolicy: IfNotPresent
           resources:
             limits:
@@ -227,8 +229,6 @@ spec:
           terminationMessagePath: /dev/termination-log
           terminationMessagePolicy: File
           volumeMounts:
-            - mountPath: /images
-              name: images-dir
             - mountPath: /csi
               name: socket-dir
             - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
@@ -241,10 +241,6 @@ spec:
                 - SYS_ADMIN
             privileged: true
       volumes:
-        - name: images-dir
-          hostPath:
-            path: /var/lib/libvirt/images
-            type: Directory
         - emptyDir:
             medium: Memory
           name: socket-dir

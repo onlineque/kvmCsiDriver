@@ -1,0 +1,20 @@
+syntax = "proto3";
+package storageagent.v1;
+
+option go_package =
+    "github.com/onlineque/kvmCsiDriver/storageagent_proto";
+
+service StorageAgent {
+    rpc CreateImage(ImageRequest) returns (Image) {}
+    rpc DeleteImage(ImageRequest) returns (Image) {}
+}
+
+message ImageRequest{
+  string imageId = 1;
+  int64 Size = 2;
+}
+
+message Image{
+  bool success = 1;
+  string imageId = 2;
+}
