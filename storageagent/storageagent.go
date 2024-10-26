@@ -17,7 +17,7 @@ type server struct {
 
 func (s *server) CreateImage(ctx context.Context, req *sa.ImageRequest) (*sa.Image, error) {
 	k := kvm.Kvm{}
-	_, err := k.CreateVolume(fmt.Sprintf("/images/%s.qcow2", req.ImageId), req.Size)
+	_, err := k.CreateVolume(fmt.Sprintf("/var/lib/libvirt/images/%s.qcow2", req.ImageId), req.Size)
 	if err != nil {
 		return nil, fmt.Errorf("error while creating the QCOW2 image (%s) for the volume: %s", fmt.Sprintf("/images/%s.qcow2", req.ImageId), err)
 	}
@@ -29,7 +29,7 @@ func (s *server) CreateImage(ctx context.Context, req *sa.ImageRequest) (*sa.Ima
 }
 
 func (s *server) DeleteImage(ctx context.Context, req *sa.ImageRequest) (*sa.Image, error) {
-	err := os.Remove(fmt.Sprintf("/images/%s.qcow2", req.ImageId))
+	err := os.Remove(fmt.Sprintf("/var/lib/libvirt/images/%s.qcow2", req.ImageId))
 	if err != nil {
 		return nil, err
 	}

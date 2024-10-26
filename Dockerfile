@@ -7,6 +7,7 @@ RUN go mod download && \
 
 COPY *.go ./
 COPY csi_proto/*.go ./csi_proto/
+COPY storageagent_proto/*.go ./storageagent_proto/
 COPY cmd/*.go ./cmd/
 COPY pkg/driver/*.go ./pkg/driver/
 COPY pkg/kvm/*.go ./pkg/kvm/

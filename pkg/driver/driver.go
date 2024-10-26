@@ -123,7 +123,7 @@ func (cs *controllerServer) CreateVolume(ctx context.Context, req *csi.CreateVol
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
-	img, err := c.CreateImage(ctx, sa.ImageRequest{
+	img, err := c.CreateImage(ctx, &sa.ImageRequest{
 		ImageId: volumeId,
 		Size:    req.CapacityRange.RequiredBytes,
 	})
