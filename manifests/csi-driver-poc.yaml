@@ -177,7 +177,7 @@ metadata:
   name: kvm-csi-driver-controller
   namespace: kvm-csi-driver
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
       app: kvm-csi-driver-controller

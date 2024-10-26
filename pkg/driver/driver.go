@@ -77,6 +77,10 @@ func (ids *identityServer) Probe(ctx context.Context, req *csi.ProbeRequest) (*c
 func (ns *nodeServer) NodePublishVolume(ctx context.Context, req *csi.NodePublishVolumeRequest) (*csi.NodePublishVolumeResponse, error) {
 	// mounting the volume should be here
 	log.Print("NodePublishVolume called")
+	volumeId := req.VolumeId
+	targetPath := req.TargetPath
+	log.Printf("- volumeId: %s\n  targetPath:%s\n", volumeId, targetPath)
+
 	return &csi.NodePublishVolumeResponse{}, nil
 }
 
@@ -145,6 +149,27 @@ func (cs *controllerServer) CreateVolume(ctx context.Context, req *csi.CreateVol
 
 func (cs *controllerServer) DeleteVolume(ctx context.Context, req *csi.DeleteVolumeRequest) (*csi.DeleteVolumeResponse, error) {
 	log.Print("DeleteVolume called")
+	volumeId := req.VolumeId
+	log.Printf("- name: %s", volumeId)
+
+	conn, err := grpc.NewClient(os.Getenv("STORAGEAGENT_TARGET"), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		return nil, err
+	}
+	defer conn.Close()
+
+	c := sa.NewStorageAgentClient(conn)
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	_, err = c.DeleteImage(ctx, &sa.ImageRequest{
+		ImageId: volumeId,
+	})
+	if err != nil {
+		return nil, err
+	}
+
 	return &csi.DeleteVolumeResponse{}, nil
 }
 
