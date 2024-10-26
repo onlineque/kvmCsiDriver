@@ -189,6 +189,7 @@ spec:
     spec:
       containers:
         - image: ghcr.io/onlineque/kvmcsidriver:main
+          imagePullPolicy: Always
           name: kvmcsidriver
           args:
             - controllerserver
