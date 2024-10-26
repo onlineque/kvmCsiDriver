@@ -1,0 +1,8 @@
+[Unit]
+Description=KVM CSI Driver StorageAgent
+
+[Service]
+ExecStart=/usr/local/bin/storageagent
+
+[Install]
+WantedBy=multi-user.target
