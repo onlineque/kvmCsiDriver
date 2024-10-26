@@ -6,6 +6,7 @@ import (
 	sa "github.com/onlineque/kvmCsiDriver/storageagent_proto"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/status"
 	wrappers "google.golang.org/protobuf/types/known/wrapperspb"
 	"log"
@@ -112,7 +113,7 @@ func (cs *controllerServer) CreateVolume(ctx context.Context, req *csi.CreateVol
 
 	volumeId := req.GetParameters()["csi.storage.k8s.io/pv/name"]
 
-	conn, err := grpc.NewClient(os.Getenv("STORAGEAGENT_TARGET"))
+	conn, err := grpc.NewClient(os.Getenv("STORAGEAGENT_TARGET"), grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return nil, err
 	}

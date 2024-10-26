@@ -22,6 +22,7 @@ func (s *server) CreateImage(ctx context.Context, req *sa.ImageRequest) (*sa.Ima
 		return nil, fmt.Errorf("error while creating the QCOW2 image (%s) for the volume: %s", fmt.Sprintf("/images/%s.qcow2", req.ImageId), err)
 	}
 
+	log.Printf("volume %s.qcow2 created", req.ImageId)
 	return &sa.Image{
 		Success: true,
 		ImageId: req.ImageId,
@@ -33,6 +34,8 @@ func (s *server) DeleteImage(ctx context.Context, req *sa.ImageRequest) (*sa.Ima
 	if err != nil {
 		return nil, err
 	}
+
+	log.Printf("volume %s.qcow2 deleted", req.ImageId)
 	return &sa.Image{
 		Success: true,
 		ImageId: req.ImageId,
@@ -59,9 +62,9 @@ func main() {
 		}
 	}()
 
-	log.Print("storageagent is running")
+	log.Print("KVM CSI Driver StorageAgent has been started")
 
 	<-ctx.Done()
 	srv.GracefulStop()
-	log.Print("storageagent has been stopped")
+	log.Print("KVM CSI Driver StorageAgent has been stopped")
 }
