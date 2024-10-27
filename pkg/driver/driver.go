@@ -132,6 +132,49 @@ func (ns *nodeServer) NodePublishVolume(ctx context.Context, req *csi.NodePublis
 func (ns *nodeServer) NodeUnpublishVolume(ctx context.Context, req *csi.NodeUnpublishVolumeRequest) (*csi.NodeUnpublishVolumeResponse, error) {
 	log.Print("NodeUnpublishVolume called")
 	// unmounting  the volume should be here
+	volumeId := req.VolumeId
+	targetPath := req.TargetPath
+	log.Printf("- volumeId: %s", volumeId)
+	log.Printf("  targetPath: %s", targetPath)
+
+	// attach volume to this node
+	config, err := rest.InClusterConfig()
+	if err != nil {
+		return nil, err
+	}
+	clientset, err := kubernetes.NewForConfig(config)
+	if err != nil {
+		return nil, err
+	}
+
+	nodeObj, err := clientset.CoreV1().Nodes().Get(context.TODO(), os.Getenv("NODE_ID"), metav1.GetOptions{})
+	if err != nil {
+		return nil, err
+	}
+	kvmDomain := nodeObj.Labels["example.clew.cz/kvm-domain"]
+	log.Printf("  kvmNode: %s", kvmDomain)
+
+	conn, err := grpc.NewClient(os.Getenv("STORAGEAGENT_TARGET"), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		return nil, err
+	}
+	defer conn.Close()
+
+	c := sa.NewStorageAgentClient(conn)
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	img, err := c.DetachVolume(ctx, &sa.VolumeRequest{
+		ImageId:    volumeId,
+		TargetPath: targetPath,
+		DomainName: kvmDomain,
+	})
+	if err != nil {
+		return nil, err
+	}
+	log.Printf("successfully detached volume %s to %s:%s", img.ImageId, kvmDomain, targetPath)
+
 	return &csi.NodeUnpublishVolumeResponse{}, nil
 }
 

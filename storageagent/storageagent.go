@@ -64,7 +64,7 @@ func (s *server) AttachVolume(ctx context.Context, req *sa.VolumeRequest) (*sa.V
 	if err != nil {
 		return nil, err
 	}
-	log.Print("successfully attached volume /var/lib/libvirt/images/%s.qcow2 to domain %s", imageId, domainName)
+	log.Printf("successfully attached volume /var/lib/libvirt/images/%s.qcow2 to domain %s", imageId, domainName)
 
 	return &sa.Volume{
 		ImageId: imageId,
@@ -73,8 +73,32 @@ func (s *server) AttachVolume(ctx context.Context, req *sa.VolumeRequest) (*sa.V
 }
 
 func (s *server) DetachVolume(ctx context.Context, req *sa.VolumeRequest) (*sa.Volume, error) {
-	// TODO
-	return &sa.Volume{}, nil
+	imageId := req.ImageId
+	targetPath := req.TargetPath
+	domainName := req.DomainName
+
+	log.Printf("unmounting /var/lib/libvirt/images/%s.qcow2 from %s:%s ...", imageId, domainName, targetPath)
+
+	k := kvm.Kvm{
+		Uri: string(libvirt.QEMUSystem),
+	}
+
+	err := k.Connect()
+	if err != nil {
+		return nil, err
+	}
+	defer k.Disconnect()
+
+	err = k.DetachVolumeFromDomain(domainName, fmt.Sprintf("/var/lib/libvirt/images/%s.qcow2", imageId), "sda")
+	if err != nil {
+		return nil, err
+	}
+	log.Printf("successfully detached volume /var/lib/libvirt/images/%s.qcow2 from domain %s", imageId, domainName)
+
+	return &sa.Volume{
+		ImageId: imageId,
+		Success: true,
+	}, nil
 }
 
 func main() {
