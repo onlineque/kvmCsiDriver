@@ -27,12 +27,12 @@ type Disk struct {
 }
 
 type Kvm struct {
-	uri string
+	Uri string
 	l   *libvirt.Libvirt
 }
 
 func (k *Kvm) Connect() error {
-	uri, _ := url.Parse(k.uri)
+	uri, _ := url.Parse(k.Uri)
 	l, err := libvirt.ConnectToURI(uri)
 	if err != nil {
 		return err

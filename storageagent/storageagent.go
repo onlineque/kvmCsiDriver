@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/digitalocean/go-libvirt"
 	"github.com/onlineque/kvmCsiDriver/pkg/kvm"
 	sa "github.com/onlineque/kvmCsiDriver/storageagent_proto"
 	"google.golang.org/grpc"
@@ -40,6 +41,37 @@ func (s *server) DeleteImage(ctx context.Context, req *sa.ImageRequest) (*sa.Ima
 		Success: true,
 		ImageId: req.ImageId,
 	}, nil
+}
+
+func (s *server) AttachVolume(ctx context.Context, req *sa.VolumeRequest) (*sa.Volume, error) {
+	imageId := req.ImageId
+	// targetPath := req.TargetPath
+	domainName := req.DomainName
+
+	k := kvm.Kvm{
+		Uri: string(libvirt.QEMUSystem),
+	}
+
+	err := k.Connect()
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer k.Disconnect()
+
+	err = k.AttachVolumeToDomain(domainName, fmt.Sprintf("/var/lib/libvirt/images/%s.qcow2", imageId), "sda")
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Print("successfully attached volume /var/lib/libvirt/images/%s.qcow2 to domain %s", imageId, domainName)
+
+	return &sa.Volume{
+		ImageId: imageId,
+		Success: true,
+	}, nil
+}
+
+func (s *server) DetachVolume(ctx context.Context, req *sa.VolumeRequest) (*sa.Volume, error) {
+
 }
 
 func main() {
