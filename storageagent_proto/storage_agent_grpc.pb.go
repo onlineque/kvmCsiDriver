@@ -24,6 +24,8 @@ const _ = grpc.SupportPackageIsVersion7
 type StorageAgentClient interface {
 	CreateImage(ctx context.Context, in *ImageRequest, opts ...grpc.CallOption) (*Image, error)
 	DeleteImage(ctx context.Context, in *ImageRequest, opts ...grpc.CallOption) (*Image, error)
+	AttachVolume(ctx context.Context, in *VolumeRequest, opts ...grpc.CallOption) (*Volume, error)
+	DetachVolume(ctx context.Context, in *VolumeRequest, opts ...grpc.CallOption) (*Volume, error)
 }
 
 type storageAgentClient struct {
@@ -52,12 +54,32 @@ func (c *storageAgentClient) DeleteImage(ctx context.Context, in *ImageRequest, 
 	return out, nil
 }
 
+func (c *storageAgentClient) AttachVolume(ctx context.Context, in *VolumeRequest, opts ...grpc.CallOption) (*Volume, error) {
+	out := new(Volume)
+	err := c.cc.Invoke(ctx, "/storageagent.v1.StorageAgent/AttachVolume", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *storageAgentClient) DetachVolume(ctx context.Context, in *VolumeRequest, opts ...grpc.CallOption) (*Volume, error) {
+	out := new(Volume)
+	err := c.cc.Invoke(ctx, "/storageagent.v1.StorageAgent/DetachVolume", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // StorageAgentServer is the server API for StorageAgent service.
 // All implementations must embed UnimplementedStorageAgentServer
 // for forward compatibility
 type StorageAgentServer interface {
 	CreateImage(context.Context, *ImageRequest) (*Image, error)
 	DeleteImage(context.Context, *ImageRequest) (*Image, error)
+	AttachVolume(context.Context, *VolumeRequest) (*Volume, error)
+	DetachVolume(context.Context, *VolumeRequest) (*Volume, error)
 	mustEmbedUnimplementedStorageAgentServer()
 }
 
@@ -70,6 +92,12 @@ func (UnimplementedStorageAgentServer) CreateImage(context.Context, *ImageReques
 }
 func (UnimplementedStorageAgentServer) DeleteImage(context.Context, *ImageRequest) (*Image, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteImage not implemented")
+}
+func (UnimplementedStorageAgentServer) AttachVolume(context.Context, *VolumeRequest) (*Volume, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AttachVolume not implemented")
+}
+func (UnimplementedStorageAgentServer) DetachVolume(context.Context, *VolumeRequest) (*Volume, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DetachVolume not implemented")
 }
 func (UnimplementedStorageAgentServer) mustEmbedUnimplementedStorageAgentServer() {}
 
@@ -120,6 +148,42 @@ func _StorageAgent_DeleteImage_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
+func _StorageAgent_AttachVolume_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(VolumeRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(StorageAgentServer).AttachVolume(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/storageagent.v1.StorageAgent/AttachVolume",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(StorageAgentServer).AttachVolume(ctx, req.(*VolumeRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _StorageAgent_DetachVolume_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(VolumeRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(StorageAgentServer).DetachVolume(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/storageagent.v1.StorageAgent/DetachVolume",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(StorageAgentServer).DetachVolume(ctx, req.(*VolumeRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // StorageAgent_ServiceDesc is the grpc.ServiceDesc for StorageAgent service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -134,6 +198,14 @@ var StorageAgent_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteImage",
 			Handler:    _StorageAgent_DeleteImage_Handler,
+		},
+		{
+			MethodName: "AttachVolume",
+			Handler:    _StorageAgent_AttachVolume_Handler,
+		},
+		{
+			MethodName: "DetachVolume",
+			Handler:    _StorageAgent_DetachVolume_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

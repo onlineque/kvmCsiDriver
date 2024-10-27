@@ -200,6 +200,9 @@ spec:
             - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
               name: kube-api-access-fz2wq
               readOnly: true
+          env:
+            - name: STORAGEAGENT_TARGET
+              value: 192.168.100.99:7003
         - image: registry.k8s.io/sig-storage/csi-provisioner:v3.4.0
           name: csi-provisioner
           args:
@@ -216,8 +219,6 @@ spec:
           env:
             - name: ADDRESS
               value: unix:///csi/csi.sock
-            - name: STORAGEAGENT_TARGET
-              value: 192.168.100.99:7003
           imagePullPolicy: IfNotPresent
           resources:
             limits:

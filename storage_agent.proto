@@ -7,6 +7,8 @@ option go_package =
 service StorageAgent {
     rpc CreateImage(ImageRequest) returns (Image) {}
     rpc DeleteImage(ImageRequest) returns (Image) {}
+    rpc AttachVolume(VolumeRequest) returns (Volume) {}
+    rpc DetachVolume(VolumeRequest) returns (Volume) {}
 }
 
 message ImageRequest{
@@ -15,6 +17,17 @@ message ImageRequest{
 }
 
 message Image{
+  bool success = 1;
+  string imageId = 2;
+}
+
+message VolumeRequest{
+  string imageId = 1;
+  string domainName = 2;
+  string targetPath = 3;
+}
+
+message Volume{
   bool success = 1;
   string imageId = 2;
 }

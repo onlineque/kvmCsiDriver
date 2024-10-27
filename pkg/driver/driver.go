@@ -9,6 +9,9 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/status"
 	wrappers "google.golang.org/protobuf/types/known/wrapperspb"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 	"log"
 	"net"
 	"os"
@@ -79,7 +82,28 @@ func (ns *nodeServer) NodePublishVolume(ctx context.Context, req *csi.NodePublis
 	log.Print("NodePublishVolume called")
 	volumeId := req.VolumeId
 	targetPath := req.TargetPath
-	log.Printf("- volumeId: %s\n  targetPath:%s\n", volumeId, targetPath)
+	log.Printf("- volumeId: %s", volumeId)
+	log.Printf("  targetPath: %s", targetPath)
+
+	// attach volume to this node
+	config, err := rest.InClusterConfig()
+	if err != nil {
+		return nil, err
+	}
+	clientset, err := kubernetes.NewForConfig(config)
+	if err != nil {
+		return nil, err
+	}
+
+	nodeObj, err := clientset.CoreV1().Nodes().Get(context.TODO(), os.Getenv("NODE_ID"), metav1.GetOptions{})
+	if err != nil {
+		return nil, err
+	}
+	kvmDomain := nodeObj.Labels["example.clew.cz/kvm-domain"]
+	log.Printf("  kvmNode: %s", kvmDomain)
+
+	// create filesystem (first check if it's not there already ?)
+	// mount it into targetPath
 
 	return &csi.NodePublishVolumeResponse{}, nil
 }
