@@ -102,6 +102,27 @@ func (ns *nodeServer) NodePublishVolume(ctx context.Context, req *csi.NodePublis
 	kvmDomain := nodeObj.Labels["example.clew.cz/kvm-domain"]
 	log.Printf("  kvmNode: %s", kvmDomain)
 
+	conn, err := grpc.NewClient(os.Getenv("STORAGEAGENT_TARGET"), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		return nil, err
+	}
+	defer conn.Close()
+
+	c := sa.NewStorageAgentClient(conn)
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	img, err := c.AttachVolume(ctx, sa.VolumeRequest{
+		ImageId:    volumeId,
+		TargetPath: targetPath,
+		DomainName: kvmDomain,
+	})
+	if err != nil {
+		return nil, err
+	}
+	log.Printf("successfully attached volume %s to %s:%s", volumeId, kvmDomain, targetPath)
+
 	// create filesystem (first check if it's not there already ?)
 	// mount it into targetPath
 
