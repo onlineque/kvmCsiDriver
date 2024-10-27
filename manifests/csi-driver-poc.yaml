@@ -75,6 +75,7 @@ spec:
               name: kube-api-access-k2fkp
               readOnly: true
       dnsPolicy: ClusterFirst
+      serviceAccountName: kvm-csi-driver-sa
       restartPolicy: Always
       volumes:
         - hostPath:
@@ -177,7 +178,7 @@ metadata:
   name: kvm-csi-driver-controller
   namespace: kvm-csi-driver
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: kvm-csi-driver-controller
@@ -350,4 +351,35 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: kvm-csi-driver-controller-sa
+    namespace: kvm-csi-driver
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: kvm-csi-driver-sa
+  namespace: kvm-csi-driver
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: kvm-csi-driver-clusterrole
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - nodes
+    verbs:
+      - get
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: kvm-csi-driver-clusterrolebinding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: kvm-csi-driver-clusterrole
+subjects:
+  - kind: ServiceAccount
+    name: kvm-csi-driver-sa
     namespace: kvm-csi-driver

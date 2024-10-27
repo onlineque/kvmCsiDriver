@@ -45,8 +45,10 @@ func (s *server) DeleteImage(ctx context.Context, req *sa.ImageRequest) (*sa.Ima
 
 func (s *server) AttachVolume(ctx context.Context, req *sa.VolumeRequest) (*sa.Volume, error) {
 	imageId := req.ImageId
-	// targetPath := req.TargetPath
+	targetPath := req.TargetPath
 	domainName := req.DomainName
+
+	log.Printf("mounting /var/lib/libvirt/images/%s.qcow2 on %s:%s ...", imageId, domainName, targetPath)
 
 	k := kvm.Kvm{
 		Uri: string(libvirt.QEMUSystem),
@@ -54,13 +56,13 @@ func (s *server) AttachVolume(ctx context.Context, req *sa.VolumeRequest) (*sa.V
 
 	err := k.Connect()
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 	defer k.Disconnect()
 
 	err = k.AttachVolumeToDomain(domainName, fmt.Sprintf("/var/lib/libvirt/images/%s.qcow2", imageId), "sda")
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 	log.Print("successfully attached volume /var/lib/libvirt/images/%s.qcow2 to domain %s", imageId, domainName)
 
@@ -71,7 +73,8 @@ func (s *server) AttachVolume(ctx context.Context, req *sa.VolumeRequest) (*sa.V
 }
 
 func (s *server) DetachVolume(ctx context.Context, req *sa.VolumeRequest) (*sa.Volume, error) {
-
+	// TODO
+	return &sa.Volume{}, nil
 }
 
 func main() {
