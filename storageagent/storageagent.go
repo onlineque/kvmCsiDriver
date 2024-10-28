@@ -17,10 +17,11 @@ type server struct {
 }
 
 func (s *server) CreateImage(ctx context.Context, req *sa.ImageRequest) (*sa.Image, error) {
+	imageName := fmt.Sprintf("/var/lib/libvirt/images/%s.qcow2", req.ImageId)
 	k := kvm.Kvm{}
-	_, err := k.CreateVolume(fmt.Sprintf("/var/lib/libvirt/images/%s.qcow2", req.ImageId), req.Size)
+	_, err := k.CreateVolume(imageName, req.Size)
 	if err != nil {
-		return nil, fmt.Errorf("error while creating the QCOW2 image (%s) for the volume: %s", fmt.Sprintf("/images/%s.qcow2", req.ImageId), err)
+		return nil, fmt.Errorf("error while creating the QCOW2 image (%s) for the volume: %s", imageName, err)
 	}
 
 	log.Printf("volume %s.qcow2 created", req.ImageId)
@@ -45,10 +46,11 @@ func (s *server) DeleteImage(ctx context.Context, req *sa.ImageRequest) (*sa.Ima
 
 func (s *server) AttachVolume(ctx context.Context, req *sa.VolumeRequest) (*sa.Volume, error) {
 	imageId := req.ImageId
+	imageName := fmt.Sprintf("/var/lib/libvirt/images/%s.qcow2", imageId)
 	targetPath := req.TargetPath
 	domainName := req.DomainName
 
-	log.Printf("mounting /var/lib/libvirt/images/%s.qcow2 on %s:%s ...", imageId, domainName, targetPath)
+	log.Printf("mounting %s on %s:%s ...", imageName, domainName, targetPath)
 
 	k := kvm.Kvm{
 		Uri: string(libvirt.QEMUSystem),
@@ -60,11 +62,16 @@ func (s *server) AttachVolume(ctx context.Context, req *sa.VolumeRequest) (*sa.V
 	}
 	defer k.Disconnect()
 
-	err = k.AttachVolumeToDomain(domainName, fmt.Sprintf("/var/lib/libvirt/images/%s.qcow2", imageId), "sda")
+	nextDeviceName, err := k.FindNextUsableDeviceName(domainName)
+	if err != nil {
+		return nil, fmt.Errorf("error looking up next free device name: %s", err)
+	}
+
+	err = k.AttachVolumeToDomain(domainName, imageName, nextDeviceName)
 	if err != nil {
 		return nil, err
 	}
-	log.Printf("successfully attached volume /var/lib/libvirt/images/%s.qcow2 to domain %s", imageId, domainName)
+	log.Printf("successfully attached volume %s to domain %s", imageName, domainName)
 
 	return &sa.Volume{
 		ImageId: imageId,
@@ -74,10 +81,11 @@ func (s *server) AttachVolume(ctx context.Context, req *sa.VolumeRequest) (*sa.V
 
 func (s *server) DetachVolume(ctx context.Context, req *sa.VolumeRequest) (*sa.Volume, error) {
 	imageId := req.ImageId
+	imageName := fmt.Sprintf("/var/lib/libvirt/images/%s.qcow2", imageId)
 	targetPath := req.TargetPath
 	domainName := req.DomainName
 
-	log.Printf("unmounting /var/lib/libvirt/images/%s.qcow2 from %s:%s ...", imageId, domainName, targetPath)
+	log.Printf("unmounting %s from %s:%s ...", imageName, domainName, targetPath)
 
 	k := kvm.Kvm{
 		Uri: string(libvirt.QEMUSystem),
@@ -89,11 +97,15 @@ func (s *server) DetachVolume(ctx context.Context, req *sa.VolumeRequest) (*sa.V
 	}
 	defer k.Disconnect()
 
-	err = k.DetachVolumeFromDomain(domainName, fmt.Sprintf("/var/lib/libvirt/images/%s.qcow2", imageId), "sda")
+	deviceName, err := k.GetDeviceNameBySource(domainName, imageName)
+	if err != nil {
+		return nil, fmt.Errorf("error getting the device name for the image: %s", err)
+	}
+	err = k.DetachVolumeFromDomain(domainName, imageName, deviceName)
 	if err != nil {
 		return nil, err
 	}
-	log.Printf("successfully detached volume /var/lib/libvirt/images/%s.qcow2 from domain %s", imageId, domainName)
+	log.Printf("successfully detached volume %s from domain %s", imageName, domainName)
 
 	return &sa.Volume{
 		ImageId: imageId,
