@@ -179,7 +179,7 @@ func (k *Kvm) CreateVolume(filepath string, size int64) error {
 }
 
 func (k *Kvm) AttachVolumeToDomain(domainName string, filepath string, targetDevice string) error {
-	rPool, err := k.l.StoragePoolLookupByName("default")
+	rPool, err := k.l.StoragePoolLookupByName("default") //TODO - default must come from a parameter
 	if err != nil {
 		log.Fatal(err)
 	}

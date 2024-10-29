@@ -76,6 +76,7 @@ func (s *server) AttachVolume(ctx context.Context, req *sa.VolumeRequest) (*sa.V
 	return &sa.Volume{
 		ImageId: imageId,
 		Success: true,
+		Device:  nextDeviceName,
 	}, nil
 }
 
