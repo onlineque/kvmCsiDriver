@@ -19,7 +19,7 @@ type server struct {
 func (s *server) CreateImage(ctx context.Context, req *sa.ImageRequest) (*sa.Image, error) {
 	imageName := fmt.Sprintf("/var/lib/libvirt/images/%s.qcow2", req.ImageId)
 	k := kvm.Kvm{}
-	_, err := k.CreateVolume(imageName, req.Size)
+	err := k.CreateVolume(imageName, req.Size)
 	if err != nil {
 		return nil, fmt.Errorf("error while creating the QCOW2 image (%s) for the volume: %s", imageName, err)
 	}

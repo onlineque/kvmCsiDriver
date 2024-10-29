@@ -4,8 +4,10 @@ import (
 	"encoding/xml"
 	"fmt"
 	"github.com/digitalocean/go-libvirt"
-	"github.com/gpu-ninja/qcow2"
+	"log"
 	"net/url"
+	"os"
+	"os/exec"
 	"strings"
 )
 
@@ -160,11 +162,33 @@ func (k *Kvm) prepareNewDiskXML(filepath string, targetDevice string) ([]byte, e
 	return newDiskXML, nil
 }
 
-func (k *Kvm) CreateVolume(filepath string, size int64) (*qcow2.Image, error) {
-	return qcow2.Create(filepath, size)
+func (k *Kvm) CreateVolume(filepath string, size int64) error {
+	//return qcow2.Create(filepath, size)
+	cmd := exec.Command("qemu-img", "create", "-f", "qcow2", filepath, fmt.Sprintf("%d", size))
+	stdout, err := cmd.Output()
+	log.Printf("image creation output: %s", stdout)
+	if err != nil {
+		return err
+	}
+	err = os.Chown(filepath, 107, 107)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (k *Kvm) AttachVolumeToDomain(domainName string, filepath string, targetDevice string) error {
+	rPool, err := k.l.StoragePoolLookupByName("default")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = k.l.StoragePoolRefresh(rPool, 0)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	dom, err := k.getDomainByName(domainName)
 	if err != nil {
 		return err
@@ -177,6 +201,7 @@ func (k *Kvm) AttachVolumeToDomain(domainName string, filepath string, targetDev
 	if err != nil {
 		return fmt.Errorf("error attaching the device: %s", err)
 	}
+
 	return nil
 }
 
