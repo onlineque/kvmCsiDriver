@@ -124,6 +124,8 @@ func (ns *nodeServer) NodePublishVolume(ctx context.Context, req *csi.NodePublis
 	log.Printf("successfully attached volume %s to %s:%s", img.ImageId, kvmDomain, targetPath)
 
 	// create filesystem (first check if it's not there already ?)
+	log.Printf("checking filesystem on /dev/%s", img.Device)
+
 	// mount it into targetPath
 
 	return &csi.NodePublishVolumeResponse{}, nil
