@@ -127,7 +127,7 @@ func (ns *nodeServer) NodePublishVolume(ctx context.Context, req *csi.NodePublis
 	// create filesystem (first check if it's not there already ?)
 	// mount it into targetPath
 	log.Printf("checking filesystem on /dev/%s", img.Device)
-	err := gofsutil.FormatAndMount(ctx, img.Device, targetPath, "ext4")
+	err = gofsutil.FormatAndMount(ctx, img.Device, targetPath, "ext4")
 	if err != nil {
 		return nil, err
 	}
