@@ -2,6 +2,7 @@ package driver
 
 import (
 	"context"
+	"github.com/akutz/gofsutil"
 	csi "github.com/onlineque/kvmCsiDriver/csi_proto"
 	sa "github.com/onlineque/kvmCsiDriver/storageagent_proto"
 	"google.golang.org/grpc"
@@ -124,22 +125,31 @@ func (ns *nodeServer) NodePublishVolume(ctx context.Context, req *csi.NodePublis
 	log.Printf("successfully attached volume %s to %s:%s", img.ImageId, kvmDomain, targetPath)
 
 	// create filesystem (first check if it's not there already ?)
-	log.Printf("checking filesystem on /dev/%s", img.Device)
-
 	// mount it into targetPath
+	log.Printf("checking filesystem on /dev/%s", img.Device)
+	err := gofsutil.FormatAndMount(ctx, img.Device, targetPath, "ext4")
+	if err != nil {
+		return nil, err
+	}
 
 	return &csi.NodePublishVolumeResponse{}, nil
 }
 
 func (ns *nodeServer) NodeUnpublishVolume(ctx context.Context, req *csi.NodeUnpublishVolumeRequest) (*csi.NodeUnpublishVolumeResponse, error) {
 	log.Print("NodeUnpublishVolume called")
-	// unmounting  the volume should be here
+
 	volumeId := req.VolumeId
 	targetPath := req.TargetPath
 	log.Printf("- volumeId: %s", volumeId)
 	log.Printf("  targetPath: %s", targetPath)
 
-	// attach volume to this node
+	// unmounting  the volume should be here
+	err := gofsutil.Unmount(ctx, req.TargetPath)
+	if err != nil {
+		return nil, err
+	}
+
+	// detach volume from this node
 	config, err := rest.InClusterConfig()
 	if err != nil {
 		return nil, err
