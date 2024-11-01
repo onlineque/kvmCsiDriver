@@ -2,6 +2,7 @@ package driver
 
 import (
 	"context"
+	"fmt"
 	"github.com/akutz/gofsutil"
 	csi "github.com/onlineque/kvmCsiDriver/csi_proto"
 	sa "github.com/onlineque/kvmCsiDriver/storageagent_proto"
@@ -127,7 +128,7 @@ func (ns *nodeServer) NodePublishVolume(ctx context.Context, req *csi.NodePublis
 	// create filesystem (first check if it's not there already ?)
 	// mount it into targetPath
 	log.Printf("checking filesystem on /dev/%s", img.Device)
-	err = gofsutil.FormatAndMount(ctx, img.Device, targetPath, "ext4")
+	err = gofsutil.FormatAndMount(ctx, fmt.Sprintf("/dev/%s", img.Device), targetPath, "ext4")
 	if err != nil {
 		return nil, err
 	}
