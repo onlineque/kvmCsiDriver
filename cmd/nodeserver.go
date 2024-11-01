@@ -9,13 +9,10 @@ import (
 // nodeserverCmd represents the nodeserver command
 var nodeserverCmd = &cobra.Command{
 	Use:   "nodeserver",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
+	Short: "Starts nodeserver component of KVM CSI Driver",
+	Long: `KVM CSI Driver NodeServer component
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+NodeServer publishes and unpublishes created volume to/from pods`,
 	Run: func(cmd *cobra.Command, args []string) {
 		log.Print("starting nodeServer...")
 		driver.RunServer(false, true)

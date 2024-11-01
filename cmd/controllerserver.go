@@ -9,13 +9,11 @@ import (
 // controllerserverCmd represents the controllerserver command
 var controllerserverCmd = &cobra.Command{
 	Use:   "controllerserver",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
+	Short: "Starts controllerserver component of KVM CSI Driver",
+	Long: `KVM CSI Driver ControllerServer component
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+ControllerServer watches the PVC is Kubernetes cluster and 
+calls the CSI driver to Create and Publish the volume`,
 	Run: func(cmd *cobra.Command, args []string) {
 		log.Print("starting controllerServer...")
 		driver.RunServer(true, false)
