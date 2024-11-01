@@ -12,16 +12,18 @@ import (
 	"os"
 )
 
+const QCOWImagePath = "/var/lib/libvirt/images/%s.qcow2"
+
 type server struct {
 	sa.UnimplementedStorageAgentServer
 }
 
-func (s *server) CreateImage(ctx context.Context, req *sa.ImageRequest) (*sa.Image, error) {
-	imageName := fmt.Sprintf("/var/lib/libvirt/images/%s.qcow2", req.ImageId)
+func (s *server) CreateImage(_ context.Context, req *sa.ImageRequest) (*sa.Image, error) {
+	imageName := fmt.Sprintf(QCOWImagePath, req.ImageId)
 	k := kvm.Kvm{}
 	err := k.CreateVolume(imageName, req.Size)
 	if err != nil {
-		return nil, fmt.Errorf("error while creating the QCOW2 image (%s) for the volume: %s", imageName, err)
+		return nil, fmt.Errorf("error while creating the QCOW2 image (%s) for the volume: %w", imageName, err)
 	}
 
 	log.Printf("volume %s.qcow2 created", req.ImageId)
@@ -31,8 +33,8 @@ func (s *server) CreateImage(ctx context.Context, req *sa.ImageRequest) (*sa.Ima
 	}, nil
 }
 
-func (s *server) DeleteImage(ctx context.Context, req *sa.ImageRequest) (*sa.Image, error) {
-	err := os.Remove(fmt.Sprintf("/var/lib/libvirt/images/%s.qcow2", req.ImageId))
+func (s *server) DeleteImage(_ context.Context, req *sa.ImageRequest) (*sa.Image, error) {
+	err := os.Remove(fmt.Sprintf(QCOWImagePath, req.ImageId))
 	if err != nil {
 		return nil, err
 	}
@@ -44,16 +46,16 @@ func (s *server) DeleteImage(ctx context.Context, req *sa.ImageRequest) (*sa.Ima
 	}, nil
 }
 
-func (s *server) AttachVolume(ctx context.Context, req *sa.VolumeRequest) (*sa.Volume, error) {
-	imageId := req.ImageId
-	imageName := fmt.Sprintf("/var/lib/libvirt/images/%s.qcow2", imageId)
+func (s *server) AttachVolume(_ context.Context, req *sa.VolumeRequest) (*sa.Volume, error) {
+	imageID := req.ImageId
+	imageName := fmt.Sprintf(QCOWImagePath, imageID)
 	targetPath := req.TargetPath
 	domainName := req.DomainName
 
 	log.Printf("mounting %s on %s:%s ...", imageName, domainName, targetPath)
 
 	k := kvm.Kvm{
-		Uri: string(libvirt.QEMUSystem),
+		URI: string(libvirt.QEMUSystem),
 	}
 
 	err := k.Connect()
@@ -64,7 +66,7 @@ func (s *server) AttachVolume(ctx context.Context, req *sa.VolumeRequest) (*sa.V
 
 	nextDeviceName, err := k.FindNextUsableDeviceName(domainName)
 	if err != nil {
-		return nil, fmt.Errorf("error looking up next free device name: %s", err)
+		return nil, fmt.Errorf("error looking up next free device name: %w", err)
 	}
 
 	err = k.AttachVolumeToDomain(domainName, imageName, nextDeviceName)
@@ -74,22 +76,22 @@ func (s *server) AttachVolume(ctx context.Context, req *sa.VolumeRequest) (*sa.V
 	log.Printf("successfully attached volume %s to domain %s", imageName, domainName)
 
 	return &sa.Volume{
-		ImageId: imageId,
+		ImageId: imageID,
 		Success: true,
 		Device:  nextDeviceName,
 	}, nil
 }
 
-func (s *server) DetachVolume(ctx context.Context, req *sa.VolumeRequest) (*sa.Volume, error) {
-	imageId := req.ImageId
-	imageName := fmt.Sprintf("/var/lib/libvirt/images/%s.qcow2", imageId)
+func (s *server) DetachVolume(_ context.Context, req *sa.VolumeRequest) (*sa.Volume, error) {
+	imageID := req.ImageId
+	imageName := fmt.Sprintf(QCOWImagePath, imageID)
 	targetPath := req.TargetPath
 	domainName := req.DomainName
 
 	log.Printf("unmounting %s from %s:%s ...", imageName, domainName, targetPath)
 
 	k := kvm.Kvm{
-		Uri: string(libvirt.QEMUSystem),
+		URI: string(libvirt.QEMUSystem),
 	}
 
 	err := k.Connect()
@@ -100,7 +102,7 @@ func (s *server) DetachVolume(ctx context.Context, req *sa.VolumeRequest) (*sa.V
 
 	deviceName, err := k.GetDeviceNameBySource(domainName, imageName)
 	if err != nil {
-		return nil, fmt.Errorf("error getting the device name for the image: %s", err)
+		return nil, fmt.Errorf("error getting the device name for the image: %w", err)
 	}
 	err = k.DetachVolumeFromDomain(domainName, imageName, deviceName)
 	if err != nil {
@@ -109,7 +111,7 @@ func (s *server) DetachVolume(ctx context.Context, req *sa.VolumeRequest) (*sa.V
 	log.Printf("successfully detached volume %s from domain %s", imageName, domainName)
 
 	return &sa.Volume{
-		ImageId: imageId,
+		ImageId: imageID,
 		Success: true,
 	}, nil
 }

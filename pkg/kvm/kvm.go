@@ -38,12 +38,12 @@ type Disk struct {
 }
 
 type Kvm struct {
-	Uri string
+	URI string
 	l   *libvirt.Libvirt
 }
 
 func (k *Kvm) Connect() error {
-	uri, _ := url.Parse(k.Uri)
+	uri, _ := url.Parse(k.URI)
 	l, err := libvirt.ConnectToURI(uri)
 	if err != nil {
 		return err
@@ -61,17 +61,17 @@ func (k *Kvm) getDomainByName(domainName string) (libvirt.Domain, error) {
 	// Find the domain by name
 	dom, err := k.l.DomainLookupByName(domainName)
 	if err != nil {
-		return libvirt.Domain{}, fmt.Errorf("error looking up the domain by name: %s", err)
+		return libvirt.Domain{}, fmt.Errorf("error looking up the domain by name: %w", err)
 	}
 	// Get the domain XML
 	domXML, err := k.l.DomainGetXMLDesc(dom, 0)
 	if err != nil {
-		return libvirt.Domain{}, fmt.Errorf("error getting the domain XML: %s", err)
+		return libvirt.Domain{}, fmt.Errorf("error getting the domain XML: %w", err)
 	}
 	// Parse the XML
 	var domain libvirt.Domain
 	if err := xml.Unmarshal([]byte(domXML), &domain); err != nil {
-		return libvirt.Domain{}, fmt.Errorf("error unmarshalling the domain XML: %s", err)
+		return libvirt.Domain{}, fmt.Errorf("error unmarshalling the domain XML: %w", err)
 	}
 	return dom, nil
 }
@@ -80,19 +80,19 @@ func (k *Kvm) getDomain(domainName string) (Domain, error) {
 	// Find the domain by name
 	domain, err := k.l.DomainLookupByName(domainName)
 	if err != nil {
-		return Domain{}, fmt.Errorf("error looking up the domain by name: %s", err)
+		return Domain{}, fmt.Errorf("error looking up the domain by name: %w", err)
 	}
 
 	// Get the domain XML
 	domXML, err := k.l.DomainGetXMLDesc(domain, 0)
 	if err != nil {
-		return Domain{}, fmt.Errorf("error getting the domain XML: %s", err)
+		return Domain{}, fmt.Errorf("error getting the domain XML: %w", err)
 	}
 	// Parse the XML
 	var dom Domain
 	err = xml.Unmarshal([]byte(domXML), &dom)
 	if err != nil {
-		return Domain{}, fmt.Errorf("error unmarshaling the domain XML: %s", err)
+		return Domain{}, fmt.Errorf("error unmarshaling the domain XML: %w", err)
 	}
 
 	return dom, nil
@@ -163,7 +163,7 @@ func (k *Kvm) prepareNewDiskXML(filepath string, targetDevice string) ([]byte, e
 }
 
 func (k *Kvm) CreateVolume(filepath string, size int64) error {
-	//return qcow2.Create(filepath, size)
+	// return qcow2.Create(filepath, size)
 	cmd := exec.Command("qemu-img", "create", "-f", "qcow2", filepath, fmt.Sprintf("%d", size))
 	stdout, err := cmd.Output()
 	log.Printf("image creation output: %s", stdout)
@@ -195,11 +195,11 @@ func (k *Kvm) AttachVolumeToDomain(domainName string, filepath string, targetDev
 	}
 	newDiskXML, err := k.prepareNewDiskXML(filepath, targetDevice)
 	if err != nil {
-		return fmt.Errorf("error preparing the new disk XML: %s", err)
+		return fmt.Errorf("error preparing the new disk XML: %w", err)
 	}
 	err = k.l.DomainAttachDevice(dom, string(newDiskXML))
 	if err != nil {
-		return fmt.Errorf("error attaching the device: %s", err)
+		return fmt.Errorf("error attaching the device: %w", err)
 	}
 
 	return nil
