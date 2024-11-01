@@ -20,6 +20,8 @@ import (
 	"time"
 )
 
+const ImplementMe = "implement me"
+
 type controllerServer struct {
 	csi.UnimplementedControllerServer
 }
@@ -45,7 +47,7 @@ func newIdentityServer(name, version string) *identityServer {
 	}
 }
 
-func (ids *identityServer) GetPluginInfo(ctx context.Context, req *csi.GetPluginInfoRequest) (*csi.GetPluginInfoResponse, error) {
+func (ids *identityServer) GetPluginInfo(_ context.Context, _ *csi.GetPluginInfoRequest) (*csi.GetPluginInfoResponse, error) {
 	if ids.name == "" {
 		return nil, status.Error(codes.Unavailable, "driver name not configured")
 	}
@@ -59,7 +61,7 @@ func (ids *identityServer) GetPluginInfo(ctx context.Context, req *csi.GetPlugin
 	}, nil
 }
 
-func (ids *identityServer) GetPluginCapabilities(ctx context.Context, req *csi.GetPluginCapabilitiesRequest) (*csi.GetPluginCapabilitiesResponse, error) {
+func (ids *identityServer) GetPluginCapabilities(_ context.Context, _ *csi.GetPluginCapabilitiesRequest) (*csi.GetPluginCapabilitiesResponse, error) {
 	log.Print("GetPluginCapabilities called")
 	return &csi.GetPluginCapabilitiesResponse{
 		Capabilities: []*csi.PluginCapability{
@@ -74,7 +76,7 @@ func (ids *identityServer) GetPluginCapabilities(ctx context.Context, req *csi.G
 	}, nil
 }
 
-func (ids *identityServer) Probe(ctx context.Context, req *csi.ProbeRequest) (*csi.ProbeResponse, error) {
+func (ids *identityServer) Probe(_ context.Context, _ *csi.ProbeRequest) (*csi.ProbeResponse, error) {
 	log.Print("Probe called")
 	return &csi.ProbeResponse{Ready: &wrappers.BoolValue{Value: true}}, nil
 }
@@ -82,9 +84,9 @@ func (ids *identityServer) Probe(ctx context.Context, req *csi.ProbeRequest) (*c
 func (ns *nodeServer) NodePublishVolume(ctx context.Context, req *csi.NodePublishVolumeRequest) (*csi.NodePublishVolumeResponse, error) {
 	// mounting the volume should be here
 	log.Print("NodePublishVolume called")
-	volumeId := req.VolumeId
+	volumeID := req.VolumeId
 	targetPath := req.TargetPath
-	log.Printf("- volumeId: %s", volumeId)
+	log.Printf("- volumeId: %s", volumeID)
 	log.Printf("  targetPath: %s", targetPath)
 
 	// attach volume to this node
@@ -112,11 +114,11 @@ func (ns *nodeServer) NodePublishVolume(ctx context.Context, req *csi.NodePublis
 
 	c := sa.NewStorageAgentClient(conn)
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
+	// ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	// defer cancel()
 
 	img, err := c.AttachVolume(ctx, &sa.VolumeRequest{
-		ImageId:    volumeId,
+		ImageId:    volumeID,
 		TargetPath: targetPath,
 		DomainName: kvmDomain,
 	})
@@ -133,7 +135,7 @@ func (ns *nodeServer) NodePublishVolume(ctx context.Context, req *csi.NodePublis
 		// Step 2: Create the directory along with any necessary parents
 		err := os.MkdirAll(targetPath, 0755) // 0755 gives read, write, and execute permissions to the owner, and read + execute permissions to others
 		if err != nil {
-			return nil, fmt.Errorf("failed to create the mountpoint directory: %s", err)
+			return nil, fmt.Errorf("failed to create the mountpoint directory: %w", err)
 		}
 		log.Printf("created mount point directory: %s\n", targetPath)
 	}
@@ -201,7 +203,7 @@ func (ns *nodeServer) NodeUnpublishVolume(ctx context.Context, req *csi.NodeUnpu
 	return &csi.NodeUnpublishVolumeResponse{}, nil
 }
 
-func (ns *nodeServer) NodeGetCapabilities(ctx context.Context, req *csi.NodeGetCapabilitiesRequest) (*csi.NodeGetCapabilitiesResponse, error) {
+func (ns *nodeServer) NodeGetCapabilities(_ context.Context, _ *csi.NodeGetCapabilitiesRequest) (*csi.NodeGetCapabilitiesResponse, error) {
 	log.Print("NodeGetCapabilities called")
 	caps := []*csi.NodeServiceCapability{}
 
@@ -210,7 +212,7 @@ func (ns *nodeServer) NodeGetCapabilities(ctx context.Context, req *csi.NodeGetC
 	}, nil
 }
 
-func (ns *nodeServer) NodeGetInfo(ctx context.Context, req *csi.NodeGetInfoRequest) (*csi.NodeGetInfoResponse, error) {
+func (ns *nodeServer) NodeGetInfo(_ context.Context, _ *csi.NodeGetInfoRequest) (*csi.NodeGetInfoResponse, error) {
 	log.Print("NodeGetInfo called")
 	return &csi.NodeGetInfoResponse{
 		NodeId: ns.nodeID,
@@ -236,8 +238,8 @@ func (cs *controllerServer) CreateVolume(ctx context.Context, req *csi.CreateVol
 
 	c := sa.NewStorageAgentClient(conn)
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
+	// ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	// defer cancel()
 
 	img, err := c.CreateImage(ctx, &sa.ImageRequest{
 		ImageId: volumeId,
@@ -271,8 +273,8 @@ func (cs *controllerServer) DeleteVolume(ctx context.Context, req *csi.DeleteVol
 
 	c := sa.NewStorageAgentClient(conn)
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
+	// ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	// defer cancel()
 
 	_, err = c.DeleteImage(ctx, &sa.ImageRequest{
 		ImageId: volumeId,
@@ -284,34 +286,34 @@ func (cs *controllerServer) DeleteVolume(ctx context.Context, req *csi.DeleteVol
 	return &csi.DeleteVolumeResponse{}, nil
 }
 
-func (cs *controllerServer) ControllerPublishVolume(ctx context.Context, req *csi.ControllerPublishVolumeRequest) (*csi.ControllerPublishVolumeResponse, error) {
+func (cs *controllerServer) ControllerPublishVolume(_ context.Context, _ *csi.ControllerPublishVolumeRequest) (*csi.ControllerPublishVolumeResponse, error) {
 	log.Print("ControllerPublishVolume called")
 	return &csi.ControllerPublishVolumeResponse{
 		PublishContext: map[string]string{},
 	}, nil
 }
 
-func (cs *controllerServer) ControllerUnpublishVolume(ctx context.Context, req *csi.ControllerUnpublishVolumeRequest) (*csi.ControllerUnpublishVolumeResponse, error) {
+func (cs *controllerServer) ControllerUnpublishVolume(_ context.Context, _ *csi.ControllerUnpublishVolumeRequest) (*csi.ControllerUnpublishVolumeResponse, error) {
 	log.Print("ControllerUnpublishVolume called")
 	return &csi.ControllerUnpublishVolumeResponse{}, nil
 }
 
-func (cs *controllerServer) ValidateVolumeCapabilities(ctx context.Context, req *csi.ValidateVolumeCapabilitiesRequest) (*csi.ValidateVolumeCapabilitiesResponse, error) {
+func (cs *controllerServer) ValidateVolumeCapabilities(_ context.Context, _ *csi.ValidateVolumeCapabilitiesRequest) (*csi.ValidateVolumeCapabilitiesResponse, error) {
 	//TODO implement me
-	panic("implement me")
+	panic(ImplementMe)
 }
 
-func (cs *controllerServer) ListVolumes(ctx context.Context, req *csi.ListVolumesRequest) (*csi.ListVolumesResponse, error) {
+func (cs *controllerServer) ListVolumes(_ context.Context, _ *csi.ListVolumesRequest) (*csi.ListVolumesResponse, error) {
 	//TODO implement me
-	panic("implement me")
+	panic(ImplementMe)
 }
 
-func (cs *controllerServer) GetCapacity(ctx context.Context, req *csi.GetCapacityRequest) (*csi.GetCapacityResponse, error) {
+func (cs *controllerServer) GetCapacity(_ context.Context, _ *csi.GetCapacityRequest) (*csi.GetCapacityResponse, error) {
 	//TODO implement me
-	panic("implement me")
+	panic(ImplementMe)
 }
 
-func (cs *controllerServer) ControllerGetCapabilities(ctx context.Context, req *csi.ControllerGetCapabilitiesRequest) (*csi.ControllerGetCapabilitiesResponse, error) {
+func (cs *controllerServer) ControllerGetCapabilities(_ context.Context, _ *csi.ControllerGetCapabilitiesRequest) (*csi.ControllerGetCapabilitiesResponse, error) {
 	log.Print("ControllerGetCapabilities called")
 	var csc []*csi.ControllerServiceCapability
 	csc = append(csc, &csi.ControllerServiceCapability{
@@ -327,34 +329,34 @@ func (cs *controllerServer) ControllerGetCapabilities(ctx context.Context, req *
 	}, nil
 }
 
-func (cs *controllerServer) CreateSnapshot(ctx context.Context, req *csi.CreateSnapshotRequest) (*csi.CreateSnapshotResponse, error) {
+func (cs *controllerServer) CreateSnapshot(_ context.Context, _ *csi.CreateSnapshotRequest) (*csi.CreateSnapshotResponse, error) {
 	//TODO implement me
-	panic("implement me")
+	panic(ImplementMe)
 }
 
-func (cs *controllerServer) DeleteSnapshot(ctx context.Context, req *csi.DeleteSnapshotRequest) (*csi.DeleteSnapshotResponse, error) {
+func (cs *controllerServer) DeleteSnapshot(_ context.Context, _ *csi.DeleteSnapshotRequest) (*csi.DeleteSnapshotResponse, error) {
 	//TODO implement me
-	panic("implement me")
+	panic(ImplementMe)
 }
 
-func (cs *controllerServer) ListSnapshots(ctx context.Context, req *csi.ListSnapshotsRequest) (*csi.ListSnapshotsResponse, error) {
+func (cs *controllerServer) ListSnapshots(_ context.Context, _ *csi.ListSnapshotsRequest) (*csi.ListSnapshotsResponse, error) {
 	//TODO implement me
-	panic("implement me")
+	panic(ImplementMe)
 }
 
-func (cs *controllerServer) ControllerExpandVolume(ctx context.Context, req *csi.ControllerExpandVolumeRequest) (*csi.ControllerExpandVolumeResponse, error) {
+func (cs *controllerServer) ControllerExpandVolume(_ context.Context, _ *csi.ControllerExpandVolumeRequest) (*csi.ControllerExpandVolumeResponse, error) {
 	//TODO implement me
-	panic("implement me")
+	panic(ImplementMe)
 }
 
-func (cs *controllerServer) ControllerGetVolume(ctx context.Context, req *csi.ControllerGetVolumeRequest) (*csi.ControllerGetVolumeResponse, error) {
+func (cs *controllerServer) ControllerGetVolume(_ context.Context, _ *csi.ControllerGetVolumeRequest) (*csi.ControllerGetVolumeResponse, error) {
 	//TODO implement me
-	panic("implement me")
+	panic(ImplementMe)
 }
 
-func (cs *controllerServer) ControllerModifyVolume(ctx context.Context, req *csi.ControllerModifyVolumeRequest) (*csi.ControllerModifyVolumeResponse, error) {
+func (cs *controllerServer) ControllerModifyVolume(_ context.Context, _ *csi.ControllerModifyVolumeRequest) (*csi.ControllerModifyVolumeResponse, error) {
 	//TODO implement me
-	panic("implement me")
+	panic(ImplementMe)
 }
 
 func RunServer(runControllerServer bool, runNodeServer bool) {
@@ -364,10 +366,8 @@ func RunServer(runControllerServer bool, runNodeServer bool) {
 	addr := "/csi/csi.sock"
 	//addr := "/tmp/csi.sock"
 
-	if proto == "unix" {
-		if err := os.Remove(addr); err != nil && !os.IsNotExist(err) {
-			log.Fatalf("failed to remove unix domain socket %s", addr)
-		}
+	if err := os.Remove(addr); err != nil && !os.IsNotExist(err) {
+		log.Fatalf("failed to remove unix domain socket %s", addr)
 	}
 
 	listener, err := net.Listen(proto, addr)
