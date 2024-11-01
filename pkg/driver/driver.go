@@ -128,6 +128,16 @@ func (ns *nodeServer) NodePublishVolume(ctx context.Context, req *csi.NodePublis
 	// create filesystem (first check if it's not there already ?)
 	// mount it into targetPath
 	log.Printf("checking filesystem on /dev/%s", img.Device)
+	// create mount directory
+	if _, err := os.Stat(targetPath); os.IsNotExist(err) {
+		// Step 2: Create the directory along with any necessary parents
+		err := os.MkdirAll(targetPath, 0755) // 0755 gives read, write, and execute permissions to the owner, and read + execute permissions to others
+		if err != nil {
+			return nil, fmt.Errorf("failed to create the mountpoint directory: %s", err)
+		}
+		log.Printf("created mount point directory: %s\n", targetPath)
+	}
+
 	err = gofsutil.FormatAndMount(ctx, fmt.Sprintf("/dev/%s", img.Device), targetPath, "ext4")
 	if err != nil {
 		return nil, err
