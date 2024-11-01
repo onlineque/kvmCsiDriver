@@ -16,7 +16,8 @@ RUN CGO_ENABLED=0 GOOS=linux go build -o /driver && \
     strip /driver && \
     upx --ultra-brute /driver
 
-FROM scratch AS final
+# FROM scratch AS final
+FROM golang:1.23.2-bookworm AS final
 LABEL org.opencontainers.image.description="PoC testing Kubernetes CSI driver"
 LABEL org.opencontainers.image.authors="Vladimir Siman (https://github.com/onlineque)"
 LABEL org.opencontainers.image.source="https://github.com/onlineque/kvmCsiDriver"
