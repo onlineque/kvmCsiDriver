@@ -8,7 +8,7 @@ on:
     tags: [ '*.*.*' ]
   pull_request:
 env:
-  CHART_NAME: garbagedisposal
+  CHART_NAME: kvm-csi-driver
   IMAGE_TAG: ${{ github.ref_name }}
 jobs:
   release-helmchart:
@@ -17,13 +17,13 @@ jobs:
       - uses: actions/checkout@v4
       - name: helm lint
         run: |
-          helm lint helm/kvmcsidriver
+          helm lint helm/kvm-csi-driver
       - name: helm login
         run: |
           echo ${{ secrets.GITHUB_TOKEN }} | helm registry login ghcr.io -u $ --password-stdin
       - name: helm package
         run: |
-          helm package helm/kvmcsidriver --version $IMAGE_TAG
+          helm package helm/kvm-csi-driver --version $IMAGE_TAG
       - name: helm push
         if: ${{ github.event_name == 'push' }}
         run: |
