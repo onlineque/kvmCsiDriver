@@ -1,129 +1,91 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "kvm-csi-driver.fullname" . }}
+  name: {{ include "kvm-csi-driver.fullname" . }}-controller
   labels:
-    {{- include "kvm-csi-driver.labels" . | nindent 4 }}
+    app: kvm-csi-driver-controller
+  {{- include "kvm-csi-driver.labels" . | nindent 4 }}
 spec:
-  {{- if not .Values.autoscaling.enabled }}
-  replicas: {{ .Values.replicaCount }}
-  {{- end }}
+  replicas: {{ .Values.controller.replicas }}
   selector:
     matchLabels:
-      {{- include "kvm-csi-driver.selectorLabels" . | nindent 6 }}
+      app: kvm-csi-driver-controller
+    {{- include "kvm-csi-driver.selectorLabels" . | nindent 6 }}
   template:
     metadata:
-      {{- with .Values.podAnnotations }}
-      annotations:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
       labels:
-        {{- include "kvm-csi-driver.labels" . | nindent 8 }}
-        {{- with .Values.podLabels }}
-        {{- toYaml . | nindent 8 }}
-        {{- end }}
+        app: kvm-csi-driver-controller
+      {{- include "kvm-csi-driver.selectorLabels" . | nindent 8 }}
     spec:
-      {{- with .Values.imagePullSecrets }}
-      imagePullSecrets:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      serviceAccountName: {{ include "kvm-csi-driver.serviceAccountName" . }}
-      securityContext:
-        {{- toYaml .Values.podSecurityContext | nindent 8 }}
       containers:
-      - name: {{ .Chart.Name }}
-        args:
-          - controllerserver
+      - args:
+        - controllerserver
         env:
-          - name: STORAGEAGENT_TARGET
-            value: {{ .Values.storageagent.uri }}
-        securityContext:
-          {{- toYaml .Values.securityContext | nindent 12 }}
-        image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
-        imagePullPolicy: {{ .Values.image.pullPolicy }}
-        resources:
-          {{- toYaml .Values.resources | nindent 12 }}
-        {{- with .Values.volumeMounts }}
+        - name: STORAGEAGENT_TARGET
+          value: {{ quote .Values.storageAgent.target }}
+        image: {{ .Values.controller.kvmcsidriver.image.repository }}:{{ .Values.controller.kvmcsidriver.image.tag
+          | default .Chart.AppVersion }}
+        imagePullPolicy: {{ .Values.controller.kvmcsidriver.imagePullPolicy }}
+        name: kvmcsidriver
+        resources: {}
         volumeMounts:
-          {{- toYaml . | nindent 12 }}
-        {{- end }}
-          - mountPath: /csi
-            name: socket-dir
-          - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
-            name: kube-api-access-fz2wq
-            readOnly: true
-      - image: registry.k8s.io/sig-storage/csi-provisioner:v3.4.0
-        name: csi-provisioner
-        args:
-          - --csi-address=$(ADDRESS)
-          - --v=0
-          - --timeout=2m30s
-          - --retry-interval-start=500ms
-          - --leader-election=true
-          - --leader-election-namespace=kvm-csi-driver
-          - --leader-election-lease-duration=137s
-          - --leader-election-renew-deadline=107s
-          - --leader-election-retry-period=26s
-          - --extra-create-metadata=true
+        - mountPath: /csi
+          name: socket-dir
+        - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+          name: kube-api-access-fz2wq
+          readOnly: true
+      - args:
+        - --csi-address=$(ADDRESS)
+        - --v=0
+        - --timeout=2m30s
+        - --retry-interval-start=500ms
+        - --leader-election=true
+        - --leader-election-namespace=kvm-csi-driver
+        - --leader-election-lease-duration=137s
+        - --leader-election-renew-deadline=107s
+        - --leader-election-retry-period=26s
+        - --extra-create-metadata=true
         env:
-          - name: ADDRESS
-            value: unix:///csi/csi.sock
-        imagePullPolicy: IfNotPresent
-        resources:
-          limits:
-            cpu: 200m
-            memory: 256Mi
-          requests:
-            cpu: 100m
-            memory: 128Mi
+        - name: ADDRESS
+          value: {{ quote .Values.controller.csiProvisioner.env.address }}
+        - name: KUBERNETES_CLUSTER_DOMAIN
+          value: {{ quote .Values.kubernetesClusterDomain }}
+        image: {{ .Values.controller.csiProvisioner.image.repository }}:{{ .Values.controller.csiProvisioner.image.tag
+          | default .Chart.AppVersion }}
+        imagePullPolicy: {{ .Values.controller.csiProvisioner.imagePullPolicy }}
+        name: csi-provisioner
+        resources: {{- toYaml .Values.controller.csiProvisioner.resources | nindent 10
+          }}
+        securityContext: {{- toYaml .Values.controller.csiProvisioner.containerSecurityContext
+          | nindent 10 }}
         terminationMessagePath: /dev/termination-log
         terminationMessagePolicy: File
         volumeMounts:
-          - mountPath: /csi
-            name: socket-dir
-          - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
-            name: kube-api-access-fz2wq
-            readOnly: true
-        securityContext:
-          allowPrivilegeEscalation: true
-          capabilities:
-            add:
-              - SYS_ADMIN
-          privileged: true
-      {{- with .Values.volumes }}
-      volumes:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-        - emptyDir:
-            medium: Memory
+        - mountPath: /csi
           name: socket-dir
-        - name: kube-api-access-fz2wq
-          projected:
-            defaultMode: 420
-            sources:
-              - serviceAccountToken:
-                  expirationSeconds: 3607
-                  path: token
-              - configMap:
-                  items:
-                    - key: ca.crt
-                      path: ca.crt
-                  name: kube-root-ca.crt
-              - downwardAPI:
-                  items:
-                    - fieldRef:
-                        apiVersion: v1
-                        fieldPath: metadata.namespace
-                      path: namespace
-      {{- with .Values.nodeSelector }}
-      nodeSelector:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- with .Values.affinity }}
-      affinity:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- with .Values.tolerations }}
-      tolerations:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
+        - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+          name: kube-api-access-fz2wq
+          readOnly: true
+      serviceAccountName: {{ include "kvm-csi-driver.fullname" . }}-controller-sa
+      volumes:
+      - emptyDir:
+          medium: Memory
+        name: socket-dir
+      - name: kube-api-access-fz2wq
+        projected:
+          defaultMode: 420
+          sources:
+          - serviceAccountToken:
+              expirationSeconds: 3607
+              path: token
+          - configMap:
+              items:
+              - key: ca.crt
+                path: ca.crt
+              name: kube-root-ca.crt
+          - downwardAPI:
+              items:
+              - fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.namespace
+                path: namespace
