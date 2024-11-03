@@ -1,0 +1,116 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: {{ include "kvm-csi-driver.fullname" . }}-kvm-csi-driver
+  labels:
+    app: kvm-csi-driver
+  {{- include "kvm-csi-driver.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      app: kvm-csi-driver
+    {{- include "kvm-csi-driver.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        app: kvm-csi-driver
+      {{- include "kvm-csi-driver.selectorLabels" . | nindent 8 }}
+    spec:
+      containers:
+      - args:
+        - nodeserver
+        env:
+        - name: STORAGEAGENT_TARGET
+          value: {{ quote .Values.storageAgent.target }}
+        - name: NODE_ID
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: spec.nodeName
+        image: {{ .Values.kvmCsiDriver.kvmCsiDriver.image.repository }}:{{ .Values.kvmCsiDriver.kvmCsiDriver.image.tag
+          | default .Chart.AppVersion }}
+        imagePullPolicy: {{ .Values.kvmCsiDriver.kvmCsiDriver.imagePullPolicy }}
+        name: kvm-csi-driver
+        resources: {}
+        securityContext: {{- toYaml .Values.kvmCsiDriver.kvmCsiDriver.containerSecurityContext
+          | nindent 10 }}
+        volumeMounts:
+        - mountPath: /csi
+          name: plugin-dir
+        - mountPath: /var/lib/kubelet/pods
+          mountPropagation: Bidirectional
+          name: pods-mount-dir
+        - mountPath: /sys
+          name: host-sys
+        - mountPath: /dev
+          name: host-dev
+      - args:
+        - --v=0
+        - --csi-address=/csi/csi.sock
+        - --kubelet-registration-path=/var/lib/kubelet/plugins/example.csi.clew.cz/csi.sock
+        env:
+        - name: KUBE_NODE_NAME
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: spec.nodeName
+        image: {{ .Values.kvmCsiDriver.driverRegistrar.image.repository }}:{{ .Values.kvmCsiDriver.driverRegistrar.image.tag
+          | default .Chart.AppVersion }}
+        imagePullPolicy: {{ .Values.kvmCsiDriver.driverRegistrar.imagePullPolicy }}
+        name: driver-registrar
+        resources: {{- toYaml .Values.kvmCsiDriver.driverRegistrar.resources | nindent
+          10 }}
+        securityContext: {{- toYaml .Values.kvmCsiDriver.driverRegistrar.containerSecurityContext
+          | nindent 10 }}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /csi
+          name: plugin-dir
+        - mountPath: /registration
+          name: registration-dir
+        - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+          name: kube-api-access-k2fkp
+          readOnly: true
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      serviceAccountName: {{ include "kvm-csi-driver.fullname" . }}-sa
+      volumes:
+      - hostPath:
+          path: /var/lib/kubelet/pods
+          type: Directory
+        name: pods-mount-dir
+      - hostPath:
+          path: /sys
+          type: ""
+        name: host-sys
+      - hostPath:
+          path: /dev
+          type: ""
+        name: host-dev
+      - hostPath:
+          path: /var/lib/kubelet/plugins/example.csi.clew.cz/
+          type: DirectoryOrCreate
+        name: plugin-dir
+      - hostPath:
+          path: /var/lib/kubelet/plugins_registry/
+          type: Directory
+        name: registration-dir
+      - name: kube-api-access-k2fkp
+        projected:
+          defaultMode: 420
+          sources:
+          - serviceAccountToken:
+              expirationSeconds: 3607
+              path: token
+          - configMap:
+              items:
+              - key: ca.crt
+                path: ca.crt
+              name: kube-root-ca.crt
+          - downwardAPI:
+              items:
+              - fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.namespace
+                path: namespace

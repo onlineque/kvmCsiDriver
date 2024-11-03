@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: test-deployment
+  name: test-deployment
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: test-deployment
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        app: test-deployment
+    spec:
+      containers:
+      - image: nginx
+        name: nginx
+        resources: {}
+        volumeMounts:
+        - name: test-pvc
+          mountPath: /test
+      volumes:
+      - persistentVolumeClaim:
+          claimName: test-pvc   
+        name: test-pvc
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: test-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  volumeMode: Filesystem
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: example-csi
+

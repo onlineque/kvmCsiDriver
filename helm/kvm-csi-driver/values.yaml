@@ -1,0 +1,62 @@
+controller:
+  csiProvisioner:
+    containerSecurityContext:
+      allowPrivilegeEscalation: true
+      capabilities:
+        add:
+        - SYS_ADMIN
+      privileged: true
+    env:
+      address: unix:///csi/csi.sock
+    image:
+      repository: registry.k8s.io/sig-storage/csi-provisioner
+      tag: v3.4.0
+    imagePullPolicy: IfNotPresent
+    resources:
+      limits:
+        cpu: 200m
+        memory: 256Mi
+      requests:
+        cpu: 100m
+        memory: 128Mi
+  kvmcsidriver:
+    image:
+      repository: ghcr.io/onlineque/kvmcsidriver
+      tag: main
+    imagePullPolicy: Always
+  replicas: 2
+controllerSa:
+  serviceAccount:
+    annotations: {}
+kubernetesClusterDomain: cluster.local
+kvmCsiDriver:
+  driverRegistrar:
+    containerSecurityContext:
+      privileged: true
+    image:
+      repository: registry.k8s.io/sig-storage/csi-node-driver-registrar
+      tag: v2.7.0
+    imagePullPolicy: IfNotPresent
+    resources:
+      limits:
+        cpu: 100m
+        memory: 256Mi
+      requests:
+        cpu: 50m
+        memory: 128Mi
+  kvmCsiDriver:
+    containerSecurityContext:
+      allowPrivilegeEscalation: true
+      capabilities:
+        add:
+        - SYS_ADMIN
+      privileged: true
+    image:
+      repository: ghcr.io/onlineque/kvmcsidriver
+      tag: main
+    imagePullPolicy: Always
+sa:
+  serviceAccount:
+    annotations: {}
+storageAgent:
+  target:
