@@ -1,6 +1,6 @@
 module github.com/onlineque/kvmCsiDriver
 
-go 1.23.1
+go 1.23
 
 require (
 	github.com/digitalocean/go-libvirt v0.0.0-20241007203800-ad92148935b6
