@@ -23,3 +23,29 @@ jobs:
 
     - name: Build
       run: CGO_ENABLED=0 GOOS=linux go build -C storageagent -o storageagent
+
+  release:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      - uses: actions/checkout@v4
+      - uses: CupOfTea696/gh-action-auto-release@v1.0.2
+        with:
+          title: "Release: $version"
+          tag: "v$semver"
+          draft: false
+          regex: "/^Release: #{semver}$/i"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  upload_artifacts:
+    name: Upload Artifacts
+    needs: [release,build]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: AButler/upload-release-assets@v3.0
+        with:
+          files: "storageagent"
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
