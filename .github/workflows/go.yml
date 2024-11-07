@@ -34,5 +34,5 @@ jobs:
       with:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
         tag: ${{ github.ref }}
-        file: storageagent/storageagent
+        file: ./storageagent/storageagent
         file_glob: true
