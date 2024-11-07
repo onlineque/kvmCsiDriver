@@ -24,6 +24,10 @@ jobs:
       - name: helm package
         run: |
           helm package helm/kvm-csi-driver --version $IMAGE_TAG
+      - name: show dir
+        run: |
+          ls -la
+          ls -la helm/
       - name: helm push
         if: ${{ github.event_name == 'push' }}
         run: |
