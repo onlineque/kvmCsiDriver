@@ -24,11 +24,7 @@ jobs:
     - name: Build
       run: CGO_ENABLED=0 GOOS=linux go build -C storageagent -o storageagent
 
-  upload_artifact:
-    name: upload artifact
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/upload-artifact@v4
-        with:
-          name: storageagent
-          path: storageagent/storageagent
+    - uses: actions/upload-artifact@v4
+      with:
+        name: storageagent
+        path: storageagent/storageagent
