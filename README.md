@@ -22,21 +22,21 @@ The value needs to contain the name of the KVM domain (virtual machine) which ru
 ## Deployment
 
 To deploy the KVM CSI Driver you need to install the Storage Agent component on the KVM host where the Kubernetes cluster is running. Only a single host KVM is supported with the Persistent Volumes created as QCOW2 images.
+Download the latest storageagent component from https://github.com/onlineque/kvmCsiDriver/releases, save it to /usr/local/bin/storageagent.
+Set the executable rights:
 
-Build the StorageAgent component:
 ```bash
-  cd storageagent
-  make
+  chmod +x /usr/local/bin/storageagent
 ```
-Copy the resulting `storageagent` binary to /usr/local/bin on the KVM node and make it executable.
+
 Copy the SystemD unit file (from storageagent/storageagent.service) to /etc/systemd/system/
 Enable the service to run upon KVM host start and start it:
 ```bash
   systemctl enable --now storageagent.service
 ```
-Deploy the KVM CSI Driver inside your kubernetes cluster by running:
+Deploy the KVM CSI Driver inside your Kubernetes cluster with helm, replace the <storage_agent_FQDN> with the actual FQDN (fully qualified domain name) of the KVM machine where your storageagent is running:
 ```bash
-  kubectl apply -f manifests/csi-driver-poc.yaml
+  helm install --create-namespace -n kvm-csi-driver kvm-csi-driver oci://ghcr.io/onlineque/kvm-csi-driver --set storageAgent.target=<storage_agent_FQDN>:7003
 ```
 
 ## Roadmap
