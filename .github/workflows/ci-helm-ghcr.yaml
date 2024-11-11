@@ -5,8 +5,7 @@ permissions:
 on:
   push:
     # Publish semver tags as releases.
-    tags: [ '*.*.*' ]
-  pull_request:
+    tags: [ '**' ]
 env:
   CHART_NAME: kvm-csi-driver
   IMAGE_TAG: ${{ github.ref_name }}
