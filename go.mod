@@ -9,7 +9,7 @@ require (
 	github.com/digitalocean/go-libvirt v0.0.0-20241211175713-901e01e93a9a
 	github.com/spf13/cobra v1.8.1
 	google.golang.org/grpc v1.69.0
-	google.golang.org/protobuf v1.35.2
+	google.golang.org/protobuf v1.36.0
 	k8s.io/apimachinery v0.32.0
 	k8s.io/client-go v0.32.0
 )
