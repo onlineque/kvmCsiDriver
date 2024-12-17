@@ -6,7 +6,7 @@ toolchain go1.23.4
 
 require (
 	github.com/akutz/gofsutil v0.1.2
-	github.com/digitalocean/go-libvirt v0.0.0-20241211175713-901e01e93a9a
+	github.com/digitalocean/go-libvirt v0.0.0-20241216201552-9fbdb61a21af
 	github.com/spf13/cobra v1.8.1
 	google.golang.org/grpc v1.69.0
 	google.golang.org/protobuf v1.36.0
@@ -39,7 +39,7 @@ require (
 	github.com/sirupsen/logrus v1.9.3 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/x448/float16 v0.8.4 // indirect
-	golang.org/x/crypto v0.30.0 // indirect
+	golang.org/x/crypto v0.31.0 // indirect
 	golang.org/x/net v0.30.0 // indirect
 	golang.org/x/oauth2 v0.23.0 // indirect
 	golang.org/x/sys v0.28.0 // indirect
