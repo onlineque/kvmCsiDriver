@@ -8,7 +8,7 @@ require (
 	github.com/akutz/gofsutil v0.1.2
 	github.com/digitalocean/go-libvirt v0.0.0-20250226181018-4d5f24afb7c2
 	github.com/spf13/cobra v1.9.1
-	google.golang.org/grpc v1.71.0
+	google.golang.org/grpc v1.71.1
 	google.golang.org/protobuf v1.36.5
 	k8s.io/apimachinery v0.32.2
 	k8s.io/client-go v0.32.2
