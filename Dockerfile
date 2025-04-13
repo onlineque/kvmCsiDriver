@@ -1,4 +1,4 @@
-FROM golang:1.24.1-alpine AS build-stage
+FROM golang:1.24.2-alpine AS build-stage
 
 WORKDIR /app
 COPY go.mod go.sum ./
@@ -17,7 +17,7 @@ RUN CGO_ENABLED=0 GOOS=linux go build -o /driver && \
     upx --ultra-brute /driver
 
 # FROM scratch AS final
-FROM golang:1.24.1-bookworm AS final
+FROM golang:1.24.2-bookworm AS final
 LABEL org.opencontainers.image.description="PoC testing Kubernetes CSI driver"
 LABEL org.opencontainers.image.authors="Vladimir Siman (https://github.com/onlineque)"
 LABEL org.opencontainers.image.source="https://github.com/onlineque/kvmCsiDriver"
