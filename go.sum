@@ -23,6 +23,8 @@ github.com/digitalocean/go-libvirt v0.0.0-20250226181018-4d5f24afb7c2 h1:rT14LkJ
 github.com/digitalocean/go-libvirt v0.0.0-20250226181018-4d5f24afb7c2/go.mod h1:SLdtxkPfIMWRTIEZ70Qt+/FduCBNaPZpIETG4MO5IUY=
 github.com/digitalocean/go-libvirt v0.0.0-20250411172002-3f9f68ae9150 h1:6h/ot7UUIc71gclu5ORuGvkB9pyJnJ+OCClz3K9ui2Q=
 github.com/digitalocean/go-libvirt v0.0.0-20250411172002-3f9f68ae9150/go.mod h1:K4EyO7uG/syLLzmp6lT+hoVdTKl4tlDy00E+N09Zfj8=
+github.com/digitalocean/go-libvirt v0.0.0-20250417173424-a6a66ef779d6 h1:jk2z9emvvDmaTwTdVOvQCK3POtH6+fEvWUtqMBjvnq0=
+github.com/digitalocean/go-libvirt v0.0.0-20250417173424-a6a66ef779d6/go.mod h1:vumyuXRJJvjCdabRsu/BvoCirqGHC5bakkC9G0V3Mgw=
 github.com/emicklei/go-restful/v3 v3.11.0 h1:rAQeMHw1c7zTmncogyy8VvRZwtkmkZ4FxERmMY4rD+g=
 github.com/emicklei/go-restful/v3 v3.11.0/go.mod h1:6n3XBCmQQb25CM2LCACGz8ukIrRry+4bhvbpWn3mrbc=
 github.com/fxamacker/cbor/v2 v2.7.0 h1:iM5WgngdRBanHcxugY4JySA0nk1wZorNOpTgCMedv5E=
