@@ -27,6 +27,8 @@ github.com/digitalocean/go-libvirt v0.0.0-20250417173424-a6a66ef779d6 h1:jk2z9em
 github.com/digitalocean/go-libvirt v0.0.0-20250417173424-a6a66ef779d6/go.mod h1:vumyuXRJJvjCdabRsu/BvoCirqGHC5bakkC9G0V3Mgw=
 github.com/digitalocean/go-libvirt v0.0.0-20250902164301-14aca49c5ed4 h1:IwNnx5XeZ6MsJAT6YigfNYFaUsvuZLWZMt6TLBvOK68=
 github.com/digitalocean/go-libvirt v0.0.0-20250902164301-14aca49c5ed4/go.mod h1:pAOTbjCWxu2F38RwPu17u156WEX+QowKpC2gqjsmFfA=
+github.com/digitalocean/go-libvirt v0.0.0-20250918173720-37cf9ecd3897 h1:i14q3mNKLspS5J5n3VEW0mCkPqtmkgUJIHndN7DuQZE=
+github.com/digitalocean/go-libvirt v0.0.0-20250918173720-37cf9ecd3897/go.mod h1:bpwT9cRrIw2c/7oYMTYC/qB987KUfS0rBV6nEelE6NM=
 github.com/emicklei/go-restful/v3 v3.11.0 h1:rAQeMHw1c7zTmncogyy8VvRZwtkmkZ4FxERmMY4rD+g=
 github.com/emicklei/go-restful/v3 v3.11.0/go.mod h1:6n3XBCmQQb25CM2LCACGz8ukIrRry+4bhvbpWn3mrbc=
 github.com/emicklei/go-restful/v3 v3.12.2 h1:DhwDP0vY3k8ZzE0RunuJy8GhNpPL6zqLkDf9B/a0/xU=
