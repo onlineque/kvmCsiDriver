@@ -6,7 +6,7 @@ toolchain go1.25.1
 
 require (
 	github.com/akutz/gofsutil v0.1.2
-	github.com/digitalocean/go-libvirt v0.0.0-20250902164301-14aca49c5ed4
+	github.com/digitalocean/go-libvirt v0.0.0-20250918173720-37cf9ecd3897
 	github.com/spf13/cobra v1.10.1
 	google.golang.org/grpc v1.75.1
 	google.golang.org/protobuf v1.36.9
